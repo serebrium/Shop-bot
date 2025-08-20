@@ -53,7 +53,7 @@ pip list --outdated
 
 ## 🛠️ Технологии
 
-- **Python 3.9+** - основной язык
+- **Python 3.9.19 (зафиксировано)** - основной язык
 - **aiogram 3.22.0+** - Telegram Bot API фреймворк
 - **SQLite** - база данных
 - **Redis** - кэширование (опционально)
@@ -65,6 +65,12 @@ pip list --outdated
 ```bash
 git clone https://github.com/serebrium/Shop-bot.git
 cd Shop-bot
+```
+
+Примечание: проект фиксирован на Python 3.9.19. При необходимости установите и активируйте через pyenv:
+```bash
+pyenv install 3.9.19
+pyenv local 3.9.19
 ```
 
 ### 2. Создание виртуального окружения

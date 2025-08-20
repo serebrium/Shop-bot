@@ -1,0 +1,29 @@
+[project]
+name = "shop-bot"
+version = "0.0.0"
+description = "Telegram shop bot"
+requires-python = ">=3.9,<3.10"
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+exclude = '''
+/(\n  \.git\n | \.venv\n | venv\n | data\n | build\n | dist\n | scripts\n)/\n'''
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203,W503"
+exclude = ".git,venv,.venv,build,dist,data"
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
