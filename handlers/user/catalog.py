@@ -1,63 +1,61 @@
 
 import logging
-from aiogram.types import Message, CallbackQuery
-from keyboards.inline.categories import categories_markup, category_cb
-from keyboards.inline.products_from_catalog import product_markup, product_cb
-from aiogram.filters.callback_data import CallbackData
-from aiogram.types import ChatAction
-from loader import get_dispatcher, db, get_bot
-from .menu import catalog
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from states import CheckoutState
+from loader import get_db
 from filters import IsUser
+from keyboards.inline.categories import categories_markup
+from keyboards.inline.products_from_catalog import product_markup
 
-# Получаем диспетчер
-dp = get_dispatcher()
-bot = get_bot()
+# Создаем роутер для user обработчиков
+router = Router()
 
+# Получаем базу данных
+db = get_db()
 
+# Константы
+catalog = '🛍️ Каталог'
 
-@dp.message(IsUser(), F.text == catalog)
+@router.message(IsUser(), F.text == catalog)
 async def process_catalog(message: Message):
-    await message.answer('Выберите раздел, чтобы вывести список товаров:',
-                         reply_markup=categories_markup())
+    
+    await message.answer('Выберите категорию:', reply_markup=categories_markup())
 
 
-@dp.callback_query(IsUser(), category_cb.filter(action='view'))
-async def category_callback_handler(query: CallbackQuery, callback_data: dict):
-
+@router.callback_query(IsUser(), F.text.startswith('category_view_'))
+async def category_callback_handler(query: CallbackQuery):
+    
+    category_idx = int(query.text.split('_')[-1])
+    
     products = db.fetchall('''SELECT * FROM products product
-    WHERE product.tag = (SELECT title FROM categories WHERE idx=?) 
-    AND product.idx NOT IN (SELECT idx FROM cart WHERE cid = ?)''',
-                           (callback_data['id'], query.message.chat.id))
-
-    await query.answer('Все доступные товары.')
+    WHERE product.tag = (SELECT title FROM categories WHERE idx=?)''',
+                           (category_idx,))
+    
+    await query.message.delete()
+    await query.answer('Все товары в этой категории.')
     await show_products(query.message, products)
 
 
-@dp.callback_query(IsUser(), product_cb.filter(action='add'))
-async def add_product_callback_handler(query: CallbackQuery, callback_data: dict):
-
-    db.query('INSERT INTO cart VALUES (?, ?, 1)',
-             (query.message.chat.id, callback_data['id']))
-
+@router.callback_query(IsUser(), F.text.startswith('product_add_'))
+async def add_product_callback_handler(query: CallbackQuery):
+    
+    product_idx = int(query.text.split('_')[-1])
+    cid = query.message.chat.id
+    
+    db.query('INSERT INTO cart VALUES (?, ?, ?)', (cid, product_idx, 1))
+    
     await query.answer('Товар добавлен в корзину!')
-    await query.message.delete()
 
 
 async def show_products(m, products):
-
-    if len(products) == 0:
-
-        await m.answer('Здесь ничего нет 😢')
-
-    else:
-
-        await bot.send_chat_action(m.chat.id, "typing")
-
-        for idx, title, body, image, price, _ in products:
-
-            markup = product_markup(idx, price)
-            text = f'<b>{title}</b>\n\n{body}'
-
-            await m.answer_photo(photo=image,
-                                 caption=text,
-                                 reply_markup=markup)
+    
+    for idx, title, body, image, price, tag in products:
+        
+        text = f'<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей.'
+        
+        markup = product_markup(idx, price)
+        
+        await m.answer_photo(photo=image,
+                             caption=text,
+                             reply_markup=markup)

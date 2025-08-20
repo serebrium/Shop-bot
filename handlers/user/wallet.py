@@ -1,18 +1,31 @@
 
-from loader import dp
-from aiogram.dispatcher import FSMContext
-from aiogram.types import Message
+from aiogram import Router, F
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from loader import get_db
 from filters import IsUser
-from .menu import balance
+from keyboards.default.markups import *
 
-# test card ==> 1111 1111 1111 1026, 12/22, CVC 000
+# Создаем роутер для user обработчиков
+router = Router()
 
-# shopId 506751
+# Получаем базу данных
+db = get_db()
 
-# shopArticleId 538350
+balance = '💰 Баланс'
 
-
-@dp.message(IsUser(), F.text == balance)
+@router.message(IsUser(), F.text == balance)
 async def process_balance(message: Message, state: FSMContext):
-    await message.answer('Ваш кошелек пуст! Чтобы его пополнить нужно...')
+    
+    cid = message.chat.id
+    
+    wallet = db.fetchone('SELECT balance FROM wallet WHERE cid = ?', (cid,))
+    
+    if wallet is None:
+        db.query('INSERT INTO wallet VALUES (?, ?)', (cid, 0))
+        balance_amount = 0
+    else:
+        balance_amount = wallet[0]
+    
+    await message.answer(f'Ваш баланс: {balance_amount} рублей')
 

@@ -1,16 +1,12 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.filters.callback_data import CallbackData
-
-product_cb = CallbackData('product', 'id', 'action')
 
 def product_markup(idx, count):
-
-    global product_cb
-
-    markup = InlineKeyboardMarkup(inline_keyboard=[])
-    back_btn = InlineKeyboardButton(text='⬅️', callback_data=product_cb.new(id=idx, action='decrease'))
-    count_btn = InlineKeyboardButton(text=str(count), callback_data=product_cb.new(id=idx, action='count'))
-    next_btn = InlineKeyboardButton(text='➡️', callback_data=product_cb.new(id=idx, action='increase'))
-    markup.inline_keyboard.append([back_btn, count_btn, next_btn])
-
+    """Создает клавиатуру для товара в корзине"""
+    markup = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text='➖', callback_data=f"product_decrease_{idx}"),
+            InlineKeyboardButton(text=f'{count}', callback_data=f"product_count_{idx}"),
+            InlineKeyboardButton(text='➕', callback_data=f"product_increase_{idx}")
+        ]
+    ])
     return markup

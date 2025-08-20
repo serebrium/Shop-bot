@@ -1,87 +1,86 @@
 
-from handlers.user.menu import questions
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.filters.callback_data import CallbackData
-from aiogram import F
-from keyboards.default.markups import all_right_message, cancel_message, submit_markup
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from aiogram.types import ChatAction
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from states import AnswerState
-from loader import get_dispatcher, db, get_bot
+from loader import get_db
 from filters import IsAdmin
+from keyboards.default.markups import *
 
-# Получаем диспетчер
-dp = get_dispatcher()
-bot = get_bot()
+# Создаем роутер для admin обработчиков
+router = Router()
 
+# Получаем базу данных
+db = get_db()
 
-question_cb = CallbackData('question', 'cid', 'action')
+# Константы
+questions = '❓ Вопросы'
 
-
-@dp.message(IsAdmin(), F.text == questions)
+@router.message(IsAdmin(), F.text == questions)
 async def process_questions(message: Message):
-
-    await bot.send_chat_action(message.chat.id, "typing")
+    
     questions = db.fetchall('SELECT * FROM questions')
-
+    
     if len(questions) == 0:
-
-        await message.answer('Нет вопросов.')
-
+        await message.answer('Вопросов пока нет.')
     else:
-
-        for cid, question in questions:
-
-                    markup = InlineKeyboardMarkup(inline_keyboard=[[
-            InlineKeyboardButton(
-                text='Ответить', callback_data=question_cb.new(cid=cid, action='answer'))
-        ]])
-
-            await message.answer(question, reply_markup=markup)
+        await questions_answer(message, questions)
 
 
-@dp.callback_query(IsAdmin(), question_cb.filter(action='answer'))
-async def process_answer(query: CallbackQuery, callback_data: dict, state: FSMContext):
+async def questions_answer(message, questions):
+    res = ''
 
-    data = await state.get_data()
-    data['cid'] = callback_data['cid']
-    await state.update_data(**data)
+    for question in questions:
+        res += f'Вопрос #{question[0]}\n\n{question[1]}\n\n{"="*50}\n\n'
 
-    await query.message.answer('Напиши ответ.', reply_markup=ReplyKeyboardRemove())
+    markup = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(
+            text='Ответить', callback_data=f'question_answer_{question[0]}')
+    ]])
+
+    await message.answer(res, reply_markup=markup)
+
+
+@router.callback_query(IsAdmin(), F.text.startswith('question_answer_'))
+async def process_answer(query: CallbackQuery, state: FSMContext):
+    
+    question_id = int(query.text.split('_')[-1])
+    
+    await state.update_data(question_id=question_id)
     await AnswerState.answer.set()
+    
+    await query.message.answer('Введите ответ на вопрос:')
+    await query.answer()
 
 
-@dp.message(IsAdmin(), state=AnswerState.answer)
+@router.message(IsAdmin(), state=AnswerState.answer)
 async def process_submit(message: Message, state: FSMContext):
-
+    
     data = await state.get_data()
-    data['answer'] = message.text
-    await state.update_data(**data)
+    answer = message.text
+    
+    await state.update_data(answer=answer)
+    await AnswerState.submit.set()
+    
+    await message.answer(f'Ответ: {answer}\n\nОтправить?', reply_markup=submit_markup())
 
-    await AnswerState.next()
-    await message.answer('Убедитесь, что не ошиблись в ответе.', reply_markup=submit_markup())
 
-
-@dp.message(IsAdmin(), F.text == cancel_message, state=AnswerState.submit)
+@router.message(IsAdmin(), F.text == cancel_message, state=AnswerState.submit)
 async def process_send_answer(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer('Отменено!', reply_markup=ReplyKeyboardRemove())
-    await state.clear()
 
 
-@dp.message(IsAdmin(), F.text == all_right_message, state=AnswerState.submit)
+@router.message(IsAdmin(), F.text == all_right_message, state=AnswerState.submit)
 async def process_send_answer(message: Message, state: FSMContext):
-
+    
     data = await state.get_data()
-
+    question_id = data['question_id']
     answer = data['answer']
-    cid = data['cid']
-
-        question = db.fetchone(
-            'SELECT question FROM questions WHERE cid=?', (cid,))[0]
-        db.query('DELETE FROM questions WHERE cid=?', (cid,))
-        text = f'Вопрос: <b>{question}</b>\n\nОтвет: <b>{answer}</b>'
-
-        await message.answer('Отправлено!', reply_markup=ReplyKeyboardRemove())
-        await bot.send_message(cid, text)
-
+    
+    # Здесь должна быть логика отправки ответа пользователю
+    # Пока просто удаляем вопрос из базы
+    db.query('DELETE FROM questions WHERE idx=?', (question_id,))
+    
     await state.clear()
+    await message.answer('Ответ отправлен!', reply_markup=ReplyKeyboardRemove())

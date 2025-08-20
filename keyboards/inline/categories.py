@@ -1,18 +1,18 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters.callback_data import CallbackData
-from loader import db
+from loader import get_db
 
-category_cb = CallbackData('category', 'id', 'action')
-
+# Получаем базу данных
+db = get_db()
 
 def categories_markup():
-
-    global category_cb
-    
+    """Создает клавиатуру с категориями"""
     markup = InlineKeyboardMarkup(inline_keyboard=[])
-    for idx, title in db.fetchall('SELECT * FROM categories'):
+    
+    categories = db.fetchall('SELECT * FROM categories')
+    for idx, title in categories:
         markup.inline_keyboard.append([
-            InlineKeyboardButton(text=title, callback_data=category_cb.new(id=idx, action='view'))
+            InlineKeyboardButton(text=title, callback_data=f"category_view_{idx}")
         ])
 
     return markup

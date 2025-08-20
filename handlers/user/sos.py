@@ -1,54 +1,52 @@
 
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram import Ffrom aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from keyboards.default.markups import all_right_message, cancel_message, submit_markup
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from states import SosState
-from filters import IsUser
-from loader import dp, db
+from loader import get_db
+from keyboards.default.markups import *
 
+# Создаем роутер для user обработчиков
+router = Router()
 
-@dp.message(commands='sos')
+# Получаем базу данных
+db = get_db()
+
+@router.message(commands='sos')
 async def cmd_sos(message: Message):
+    await message.answer('Опишите вашу проблему:')
     await SosState.question.set()
-    await message.answer('В чем суть проблемы? Опишите как можно детальнее и администратор обязательно вам ответит.', reply_markup=ReplyKeyboardRemove())
 
 
-@dp.message(state=SosState.question)
+@router.message(state=SosState.question)
 async def process_question(message: Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['question'] = message.text
+    
+    question = message.text
+    await state.update_data(question=question)
+    await SosState.submit.set()
+    
+    await message.answer(f'Вопрос: {question}\n\nОтправить?', reply_markup=submit_markup())
 
-    await message.answer('Убедитесь, что все верно.', reply_markup=submit_markup())
-    await SosState.next()
 
-
-@dp.message(lambda message: message.text not in [cancel_message, all_right_message], state=SosState.submit)
+@router.message(lambda message: message.text not in [cancel_message, all_right_message], state=SosState.submit)
 async def process_price_invalid(message: Message):
     await message.answer('Такого варианта не было.')
 
 
-@dp.message(F.text == cancel_message, state=SosState.submit)
+@router.message(F.text == cancel_message, state=SosState.submit)
 async def process_cancel(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer('Отменено!', reply_markup=ReplyKeyboardRemove())
-    await state.clear()
 
 
-@dp.message(F.text == all_right_message, state=SosState.submit)
+@router.message(F.text == all_right_message, state=SosState.submit)
 async def process_submit(message: Message, state: FSMContext):
-
+    
+    data = await state.get_data()
+    question = data['question']
     cid = message.chat.id
-
-    if db.fetchone('SELECT * FROM questions WHERE cid=?', (cid,)) == None:
-
-        async with state.proxy() as data:
-            db.query('INSERT INTO questions VALUES (?, ?)',
-                     (cid, data['question']))
-
-        await message.answer('Отправлено!', reply_markup=ReplyKeyboardRemove())
-
-    else:
-
-        await message.answer('Превышен лимит на количество задаваемых вопросов.', reply_markup=ReplyKeyboardRemove())
-
+    
+    db.query('INSERT INTO questions VALUES (?, ?)', (cid, question))
+    
     await state.clear()
+    await message.answer('Вопрос отправлен!', reply_markup=ReplyKeyboardRemove())
