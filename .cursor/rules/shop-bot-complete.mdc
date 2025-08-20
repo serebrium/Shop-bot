@@ -1,0 +1,153 @@
+---
+alwaysApply: true
+---
+# Shop-bot Complete Project Rules
+
+## 🏗️ Архитектура проекта
+
+### Основные файлы
+- **Главный файл**: [app.py](mdc:app.py) - точка входа приложения
+- **Загрузчик**: [loader.py](mdc:loader.py) - инициализация компонентов
+- **Конфигурация**: [data/config.py](mdc:data/config.py) - настройки
+- **База данных**: [utils/db/storage.py](mdc:utils/db/storage.py) - управление БД
+
+### Структура модулей
+```
+Shop-bot/
+├── app.py              # Главный файл приложения
+├── loader.py           # Загрузчик компонентов  
+├── data/               # Конфигурация и данные
+├── handlers/           # Обработчики команд
+├── keyboards/          # Клавиатуры и разметки
+├── states/             # Состояния FSM
+├── utils/              # Утилиты и база данных
+└── requirements.txt    # Зависимости
+```
+
+## 🔧 Технические особенности
+
+### Версии и зависимости
+- **Python**: 3.9+ (совместимо с 3.7 для Docker)
+- **aiogram**: 2.9.2
+- **База данных**: SQLite с автоматическим созданием таблиц
+- **Режимы**: Polling (разработка) и Webhook (продакшен)
+
+### Ленивая инициализация
+В [loader.py](mdc:loader.py) используется ленивая инициализация:
+- `get_dispatcher()` - создает диспетчер только при необходимости
+- `get_bot()` - создает бота только при необходимости
+- Проверка валидности токена перед созданием
+
+## 📝 Паттерны кодирования
+
+### Импорты (для всех .py файлов)
+```python
+# Правильно:
+from loader import get_dispatcher, get_bot, db
+dp = get_dispatcher()
+bot = get_bot()
+
+# Неправильно:
+from loader import dp, bot  # dp может быть None
+```
+
+### Обработчики сообщений
+```python
+@dp.message_handler(IsAdmin(), text=command)
+async def handler_name(message: Message):
+    # Логика обработчика
+    pass
+
+@dp.callback_query_handler(IsUser(), callback_data.filter())
+async def callback_handler(query: CallbackQuery, callback_data: dict):
+    # Логика обработки callback
+    pass
+```
+
+### Фильтры доступа
+- **IsAdmin()** - для администраторов (проверяет [data/config.py](mdc:data/config.py) ADMINS)
+- **IsUser()** - для обычных пользователей (не администраторы)
+
+### Работа с базой данных
+```python
+# Создание таблиц (автоматически при запуске)
+db.create_tables()
+
+# Запросы
+db.query('INSERT INTO table VALUES (?, ?)', (param1, param2))
+result = db.fetchone('SELECT * FROM table WHERE id = ?', (id,))
+results = db.fetchall('SELECT * FROM table')
+```
+
+## 🗄️ Структура базы данных
+
+### Таблицы
+- **categories**: (idx, title) - категории товаров
+- **products**: (idx, title, body, image, price, tag) - товары
+- **cart**: (cid, idx, quantity) - корзина пользователя
+- **orders**: (cid, usr_name, usr_address, products) - заказы
+- **wallet**: (cid, balance) - кошелек пользователя
+- **questions**: (cid, question) - вопросы пользователей
+
+### Операции
+- Всегда используйте параметризованные запросы
+- Передавайте параметры как кортеж: `(param,)`
+- Проверяйте существование данных перед операциями
+
+## ⚙️ Конфигурация
+
+### Переменные окружения (.env)
+```env
+BOT_TOKEN=ваш_токен_бота          # Обязательно
+PROJECT_NAME=shop-bot              # Для webhook
+ADMINS=123456789,987654321        # ID через запятую
+RAILWAY_PUBLIC_DOMAIN=            # Для Railway
+WEBHOOK_PATH=                      # Для webhook
+```
+
+### Безопасность
+- Никогда не коммитьте .env файл
+- Проверяйте длину токена (минимум 10 символов)
+- Валидируйте ID администраторов
+
+## 🚀 Развертывание
+
+### Локальная разработка
+```bash
+source venv/bin/activate
+python3 app.py
+```
+
+### Docker
+Используйте [Dockerfile](mdc:Dockerfile), но обновите Python версию с 3.7 на 3.9+
+
+### Heroku/Railway
+- Установите переменные окружения в панели управления
+- WEBHOOK_HOST и WEBHOOK_PATH обязательны
+- PORT автоматически устанавливается платформой
+
+## 🐛 Устранение проблем
+
+### Частые ошибки
+1. **Token is invalid** - проверьте BOT_TOKEN в .env
+2. **Import errors** - убедитесь, что виртуальное окружение активировано
+3. **Database errors** - проверьте права доступа к папке data/
+
+### Отладка
+- Используйте `logging.info()` для отладки
+- Проверяйте структуру файлов и импорты
+- Тестируйте компоненты по отдельности
+
+## 📚 Дополнительные ресурсы
+
+- **Документация**: [SETUP.md](mdc:SETUP.md) - подробная инструкция по настройке
+- **README**: [README.md](mdc:README.md) - описание функциональности
+- **Требования**: [requirements.txt](mdc:requirements.txt) - зависимости проекта
+
+## 🎯 Лучшие практики
+
+1. **Всегда** используйте `get_dispatcher()` и `get_bot()` из loader
+2. **Всегда** применяйте фильтры IsAdmin/IsUser для безопасности
+3. **Всегда** используйте параметризованные SQL запросы
+4. **Всегда** проверяйте существование данных перед операциями
+5. **Никогда** не хардкодите токены или ID в коде

@@ -1,4 +1,5 @@
-from .admin import dp
-from .user import dp
+# Ленивый импорт обработчиков
+# from . import admin
+# from . import user
 
-__all__ = ['dp']
+__all__ = ['admin', 'user']

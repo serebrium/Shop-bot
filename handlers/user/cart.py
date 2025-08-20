@@ -6,9 +6,14 @@ from aiogram.utils.callback_data import CallbackData
 from keyboards.default.markups import *
 from aiogram.types.chat import ChatActions
 from states import CheckoutState
-from loader import dp, db, bot
+from loader import get_dispatcher, db, get_bot
 from filters import IsUser
 from .menu import cart
+
+# Получаем диспетчер
+dp = get_dispatcher()
+bot = get_bot()
+
 
 
 @dp.message_handler(IsUser(), text=cart)

@@ -1,95 +1,171 @@
+# Shop-bot 🤖🛍️
+
 <p align="center">
-  <a href="https://t.me/example_store_bot"><img src="data/assets/logo.png" alt="ShopBot"></a>
+  <a href="https://t.me/example_store_bot"><img src="data/assets/logo.png" alt=""></a>
 </p>
 
-This is an example Telegram shop bot. It's a simple and, most importantly, efficient way to place an order without leaving your favorite messenger.
+Это современный Telegram бот-магазин с улучшенной архитектурой и расширенным функционалом. Простой и эффективный способ размещения заказов прямо в любимом мессенджере.
 
-## What can it do?
+## ✨ Новые возможности
 
-1. `/start` - needed to start the bot and choose the mode (user/admin).
+- 🚀 **Обновленная архитектура** - поддержка aiogram 3.x
+- 🗄️ **Улучшенная БД** - автоматические миграции и индексы
+- 📊 **Логирование** - детальное отслеживание всех операций
+- 🛡️ **Безопасность** - валидация данных и обработка ошибок
+- 🐳 **Docker** - оптимизированный контейнер для продакшена
+- 🔄 **Миграции** - автоматическое обновление структуры БД
 
-2. `/menu` - go to the menu.
+## 🎯 Что умеет бот?
 
-3. `/sos` - ask the administrator a question.
+1. **`/start`** - запуск бота и выбор режима (пользователь/администратор)
+2. **`/menu`** - переход в главное меню
+3. **`/sos`** - задать вопрос администратору
 
-## Menu
+## 📱 Интерфейс
 
-The user menu looks like this:
-
+### Пользовательское меню
 ![User Menu](data/assets/4.png)
 
-## Catalog
+### Каталог товаров
+Каталог состоит из товаров, отсортированных по категориям. Пользователи могут добавлять товары в корзину, а администратор имеет полный контроль над управлением каталогом (добавление/удаление).
 
-The catalog consists of products sorted by categories. Users can add items to their cart, and the admin has full control over catalog management (addition/removal).
-
-## Cart
-
-The ordering process looks like this: the user goes to the `🛍️ Catalog`, selects the desired category, chooses products, and clicks the `🛒 Cart` button.
+### Корзина и заказы
+Процесс заказа выглядит так: пользователь переходит в `🛍️ Catalog`, выбирает нужную категорию, выбирает товары и нажимает кнопку `🛒 Cart`.
 
 ![cart](data/assets/5.png)
 
----
-
-Then, after making sure everything is in place, proceed to checkout by clicking `📦 Place Order`.
+Затем, убедившись, что все на месте, переходит к оформлению заказа, нажав `📦 Place Order`.
 
 ![checkout](data/assets/6.png)
 
-## Add a Product
+## ➕ Добавление товара
 
-To add a product, select a category and click the `➕ Add Product` button. Then, fill out the "name-description-image-price" form and confirm.
+Для добавления товара выберите категорию и нажмите кнопку `➕ Add Product`. Затем заполните форму "название-описание-изображение-цена" и подтвердите.
 
 ![add_product](data/assets/1.png)
 
-## Contacting Administration
+## 📞 Связь с администрацией
 
-To ask the admin a question, simply select the `/sos` command. There is a limit on the number of questions.
+Чтобы задать вопрос администратору, просто выберите команду `/sos`. Есть ограничение на количество вопросов.
 
 ![sos](data/assets/7.png)
 
-## Get started
+## 🚀 Быстрый старт
 
-1. Clone this repository.
+### 1. Клонируйте репозиторий
+```bash
+git clone https://github.com/your-username/shop-bot.git
+cd shop-bot
+```
 
-2. Create and activate virtual enviroment:
+### 2. Создайте и активируйте виртуальное окружение
 
-Windows:
-
+**Windows:**
 ```powershell
 python -m venv venv
 & venv/scripts/activate.ps1
 ```
 
-UNIX:
-
+**UNIX/macOS:**
 ```bash
 python3 -m venv venv
-source venv/scripts/activate
+source venv/bin/activate
 ```
 
-3. Install the requirements:
-
+### 3. Установите зависимости
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Create and populate `.env` file in the root directory. Here are the required keys (_\*_ - always required; _\*\*_ - required only in production):
+### 4. Настройте конфигурацию
+Скопируйте `env.example` в `.env` и заполните необходимые параметры:
 
-| Key                                  | Value                                                                                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| BOT*TOKEN (*\*\_)                    | To get bot token, you need create a bot via [BotFather](https://t.me/BotFather/).                                                           |
-| PROJECT*NAME (*\*\*\_)               | Name of your project on Heroku (required if you want to deploy bot on Heroku).                                                              |
-| WEBHOOK*HOST, WEBHOOK_PATH (*\*\*\_) | Webhook host and path.                                                                                                                      |
-| ADMINS (_\*\*_)                      | A comma-separated string of admins IDs (e.g., 000000000,123456789). To get your Telegram ID, use [Get My ID bot](https://t.me/getmyid_bot). |
+| Параметр | Описание | Обязательный |
+|----------|----------|--------------|
+| `BOT_TOKEN` | Токен бота от [@BotFather](https://t.me/BotFather/) | ✅ Да |
+| `ADMINS` | ID администраторов через запятую | ❌ Нет |
+| `PROJECT_NAME` | Название проекта на Heroku | ❌ Нет |
+| `RAILWAY_PUBLIC_DOMAIN` | Домен Railway для webhook | ❌ Нет |
+| `WEBHOOK_PATH` | Путь для webhook | ❌ Нет |
 
-Example:
-
+**Пример .env файла:**
 ```properties
-BOT_TOKEN=YOUR_BOT_TOKEN
-ADMINS=123456789,000000000
+BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
+ADMINS=123456789,987654321
+PROJECT_NAME=my-shop-bot
+RAILWAY_PUBLIC_DOMAIN=my-bot.railway.app
+WEBHOOK_PATH=/webhook
 ```
 
-5. Run `app.py`:
-
+### 5. Запустите бота
 ```bash
 python3 app.py
 ```
+
+## 🐳 Docker
+
+Для запуска в Docker:
+
+```bash
+# Сборка образа
+docker build -t shop-bot .
+
+# Запуск контейнера
+docker run -p 5000:5000 --env-file .env shop-bot
+```
+
+## 🏗️ Архитектура
+
+```
+Shop-bot/
+├── app.py              # Главный файл приложения
+├── loader.py           # Загрузчик компонентов  
+├── data/               # Конфигурация и данные
+├── handlers/           # Обработчики команд
+├── keyboards/          # Клавиатуры и разметки
+├── states/             # Состояния FSM
+├── utils/              # Утилиты и база данных
+└── requirements.txt    # Зависимости
+```
+
+## 🗄️ База данных
+
+### Таблицы
+- **categories** - категории товаров
+- **products** - товары с улучшенной структурой
+- **cart** - корзина пользователя
+- **orders** - заказы с отслеживанием статуса
+- **wallet** - кошелек пользователя
+- **questions** - вопросы пользователей
+
+### Автоматические миграции
+Бот автоматически обновляет структуру БД при запуске, применяя необходимые миграции.
+
+## 🔧 Разработка
+
+### Ленивая инициализация
+Все компоненты инициализируются только при необходимости:
+```python
+from loader import get_dispatcher, get_bot, db
+dp = get_dispatcher()
+bot = get_bot()
+```
+
+### Логирование
+Все операции логируются в файл `bot.log` и консоль для отладки.
+
+## 📚 Дополнительные ресурсы
+
+- **SETUP.md** - подробная инструкция по настройке
+- **env.example** - пример конфигурации
+- **requirements.txt** - зависимости проекта
+
+## 🤝 Поддержка
+
+Если у вас есть вопросы или предложения:
+1. Создайте Issue в репозитории
+2. Напишите разработчику: [@NikolaySimakov](https://t.me/NikolaySimakov)
+
+## 📄 Лицензия
+
+Этот проект распространяется под лицензией MIT. См. файл [LICENSE](LICENSE) для подробностей.

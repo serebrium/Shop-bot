@@ -5,9 +5,14 @@ from keyboards.inline.categories import categories_markup, category_cb
 from keyboards.inline.products_from_catalog import product_markup, product_cb
 from aiogram.utils.callback_data import CallbackData
 from aiogram.types.chat import ChatActions
-from loader import dp, db, bot
+from loader import get_dispatcher, db, get_bot
 from .menu import catalog
 from filters import IsUser
+
+# Получаем диспетчер
+dp = get_dispatcher()
+bot = get_bot()
+
 
 
 @dp.message_handler(IsUser(), text=catalog)

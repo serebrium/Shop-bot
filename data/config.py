@@ -1,10 +1,21 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Проверяем существование .env файла
+env_path = Path('.env')
+if env_path.exists():
+    load_dotenv()
+else:
+    print("⚠️  Файл .env не найден! Создайте его с необходимыми переменными окружения.")
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Проверяем валидность токена
+if not BOT_TOKEN or BOT_TOKEN == "your_bot_token_here" or len(BOT_TOKEN) < 10:
+    print("❌ BOT_TOKEN не установлен в .env файле или имеет неверный формат")
+    BOT_TOKEN = None
 
 PROJECT_NAME = os.getenv("PROJECT_NAME")
 
@@ -21,4 +32,29 @@ if WEBHOOK_HOST and WEBHOOK_PATH:
 else:
     WEBHOOK_URL = None
 
-ADMINS = list(map(int, os.getenv("ADMINS", "").split(",")))
+# Redis для FSM storage (опционально)
+REDIS_URL = os.getenv("REDIS_URL")
+
+# Безопасная обработка ADMINS
+admins_str = os.getenv("ADMINS", "")
+if admins_str and admins_str.strip():
+    try:
+        ADMINS = list(map(int, admins_str.split(",")))
+        print(f"✅ Загружено {len(ADMINS)} администраторов")
+    except ValueError as e:
+        print(f"❌ Ошибка при парсинге ADMINS: {e}")
+        ADMINS = []
+else:
+    print("⚠️  ADMINS не установлены в .env файле")
+    ADMINS = []
+
+# Настройки логирования
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FILE = os.getenv("LOG_FILE", "bot.log")
+
+# Настройки базы данных
+DB_PATH = os.getenv("DB_PATH", "data/database.db")
+
+# Настройки webhook
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "0.0.0.0")
+WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "5000"))

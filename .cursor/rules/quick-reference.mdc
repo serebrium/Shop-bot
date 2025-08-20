@@ -1,0 +1,36 @@
+---
+description: "Quick reference for Shop-bot development patterns and common tasks"
+---
+# Shop-bot Quick Reference
+
+## 🚀 Быстрый запуск
+```bash
+source venv/bin/activate
+python3 app.py
+```
+
+## 🔑 Ключевые импорты
+```python
+from loader import get_dispatcher, get_bot, db
+dp = get_dispatcher()
+bot = get_bot()
+```
+
+## 📱 Основные обработчики
+```python
+@dp.message_handler(IsAdmin(), text=command)
+@dp.callback_query_handler(IsUser(), callback_data.filter())
+```
+
+## 🗄️ База данных
+```python
+db.create_tables()
+db.query('SQL', (params,))
+db.fetchone('SQL', (params,))
+db.fetchall('SQL', (params,))
+```
+
+## ⚙️ Конфигурация
+- BOT_TOKEN в .env
+- ADMINS через запятую
+- Используйте get_dispatcher() вместо прямого импорта dp

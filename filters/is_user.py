@@ -1,9 +1,11 @@
 
 from aiogram.types import Message
-from aiogram.dispatcher.filters import BoundFilter
+from aiogram.filters import BaseFilter
 from data.config import ADMINS
 
-class IsUser(BoundFilter):
+class IsUser(BaseFilter):
+    """Фильтр для проверки обычного пользователя"""
 
-    async def check(self, message: Message):
+    async def __call__(self, message: Message) -> bool:
+        """Проверяет, является ли пользователь обычным пользователем (не администратором)"""
         return message.from_user.id not in ADMINS

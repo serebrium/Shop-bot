@@ -6,8 +6,13 @@ from keyboards.default.markups import all_right_message, cancel_message, submit_
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.types.chat import ChatActions
 from states import AnswerState
-from loader import dp, db, bot
+from loader import get_dispatcher, db, get_bot
 from filters import IsAdmin
+
+# Получаем диспетчер
+dp = get_dispatcher()
+bot = get_bot()
+
 
 question_cb = CallbackData('question', 'cid', 'action')
 

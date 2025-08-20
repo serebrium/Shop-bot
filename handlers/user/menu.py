@@ -1,7 +1,15 @@
 
+from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup
-from loader import dp
+from aiogram.filters import Command
+from loader import get_dispatcher
 from filters import IsAdmin, IsUser
+
+# Создаем роутер для user обработчиков
+router = Router()
+
+# Получаем диспетчер
+dp = get_dispatcher()
 
 catalog = '🛍️ Каталог'
 balance = '💰 Баланс'
@@ -12,7 +20,7 @@ settings = '⚙️ Настройка каталога'
 orders = '🚚 Заказы'
 questions = '❓ Вопросы'
 
-@dp.message_handler(IsAdmin(), commands='menu')
+@router.message(IsAdmin(), Command('menu'))
 async def admin_menu(message: Message):
     markup = ReplyKeyboardMarkup(selective=True)
     markup.add(settings)
@@ -20,7 +28,7 @@ async def admin_menu(message: Message):
 
     await message.answer('Меню', reply_markup=markup)
 
-@dp.message_handler(IsUser(), commands='menu')
+@router.message(IsUser(), Command('menu'))
 async def user_menu(message: Message):
     markup = ReplyKeyboardMarkup(selective=True)
     markup.add(catalog)

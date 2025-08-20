@@ -6,9 +6,13 @@ from keyboards.default.markups import *
 from states import ProductState, CategoryState
 from aiogram.types.chat import ChatActions
 from handlers.user.menu import settings
-from loader import dp, db, bot
+from loader import get_dispatcher, db, get_bot
 from filters import IsAdmin
 from hashlib import md5
+
+# Получаем диспетчер
+dp = get_dispatcher()
+bot = get_bot()
 
 
 category_cb = CallbackData('category', 'id', 'action')

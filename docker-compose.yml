@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Redis для FSM storage
+  redis:
+    image: redis:7-alpine
+    container_name: shop-bot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+  # Основное приложение
+  bot:
+    build: .
+    container_name: shop-bot
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+
+volumes:
+  redis_data:
