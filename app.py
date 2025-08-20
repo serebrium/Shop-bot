@@ -1,7 +1,7 @@
 import os
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from aiogram import F
 from data import config
 from loader import get_dispatcher, get_bot, db, register_routers
@@ -52,8 +52,11 @@ async def cmd_start(message: types.Message):
 
         logger.info(f"Пользователь {user_id} запустил бота")
 
-        markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-        markup.row(f"👤 {user_message}", f"⚙️ {admin_message}")
+        markup = ReplyKeyboardMarkup(
+            resize_keyboard=True, 
+            one_time_keyboard=True,
+            keyboard=[[KeyboardButton(text=f"👤 {user_message}"), KeyboardButton(text=f"⚙️ {admin_message}")]]
+        )
 
         await message.answer(
             """Привет! 👋

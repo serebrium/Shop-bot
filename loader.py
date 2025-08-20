@@ -75,22 +75,22 @@ def get_db():
 # Функция для регистрации роутеров
 def register_routers():
     """Регистрирует все роутеры в диспетчере"""
-    from handlers.admin import add, orders, questions
-    from handlers.user import menu, catalog, cart, wallet, sos, delivery_status
+    from handlers.admin import add_router, orders_router, questions_router
+    from handlers.user import menu_router, catalog_router, cart_router, wallet_router, sos_router, delivery_router
 
     dp = get_dispatcher()
 
     # Регистрируем admin роутеры
-    dp.include_router(add.router)
-    dp.include_router(orders.router)
-    dp.include_router(questions.router)
+    dp.include_router(add_router)
+    dp.include_router(orders_router)
+    dp.include_router(questions_router)
 
     # Регистрируем user роутеры
-    dp.include_router(menu.router)
-    dp.include_router(catalog.router)
-    dp.include_router(cart.router)
-    dp.include_router(wallet.router)
-    dp.include_router(sos.router)
-    dp.include_router(delivery_status.router)
+    dp.include_router(menu_router)
+    dp.include_router(catalog_router)
+    dp.include_router(cart_router)
+    dp.include_router(wallet_router)
+    dp.include_router(sos_router)
+    dp.include_router(delivery_router)
 
     logger.info("Все роутеры зарегистрированы")

@@ -13,9 +13,9 @@ db = get_db()
 
 
 @router.message(commands="sos")
-async def cmd_sos(message: Message):
+async def cmd_sos(message: Message, state: FSMContext):
     await message.answer("Опишите вашу проблему:")
-    await SosState.question.set()
+    await state.set(SosState.question)
 
 
 @router.message(state=SosState.question)
@@ -23,7 +23,7 @@ async def process_question(message: Message, state: FSMContext):
 
     question = message.text
     await state.update_data(question=question)
-    await SosState.submit.set()
+    await state.set(SosState.submit)
 
     await message.answer(
         f"Вопрос: {question}\n\nОтправить?", reply_markup=submit_markup()

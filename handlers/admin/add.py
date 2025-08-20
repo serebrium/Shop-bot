@@ -8,10 +8,11 @@ from aiogram.types import (
     ContentType,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
+    KeyboardButton,
 )
 from keyboards.default.markups import *
 from states import ProductState, CategoryState
-from aiogram.types import ChatAction
+from aiogram.enums import ChatAction
 from handlers.user.menu import settings
 from loader import get_db, get_bot
 from filters import IsAdmin
@@ -49,10 +50,13 @@ async def process_settings(message: Message):
     await message.answer("Настройка категорий:", reply_markup=markup)
 
 
-@router.callback_query(IsAdmin(), F.text.startswith("category_view_"))
+@router.callback_query(IsAdmin(), F.data.startswith("category_view_"))
 async def category_callback_handler(query: CallbackQuery, state: FSMContext):
 
-    category_idx = int(query.text.split("_")[-1])
+    if query.data is None:
+        return
+        
+    category_idx = int(query.data.split("_")[-1])
 
     products = db.fetchall(
         """SELECT * FROM products product
@@ -60,20 +64,23 @@ async def category_callback_handler(query: CallbackQuery, state: FSMContext):
         (category_idx,),
     )
 
-    await query.message.delete()
+    if query.message:
+        await query.message.delete()
     await query.answer("Все добавленные товары в эту категорию.")
     await state.update_data(category_index=category_idx)
-    await show_products(query.message, products, category_idx)
+    if query.message:
+        await show_products(query.message, products, category_idx)
 
 
 # category
 
 
-@router.callback_query(IsAdmin(), F.text == "add_category")
-async def add_category_callback_handler(query: CallbackQuery):
-    await query.message.delete()
-    await query.message.answer("Название категории?")
-    await CategoryState.title.set()
+@router.callback_query(IsAdmin(), F.data == "add_category")
+async def add_category_callback_handler(query: CallbackQuery, state: FSMContext):
+    if query.message:
+        await query.message.delete()
+        await query.message.answer("Название категории?")
+        await state.set(CategoryState.title)
 
 
 @router.message(IsAdmin(), state=CategoryState.title)
@@ -110,11 +117,11 @@ async def delete_category_handler(message: Message, state: FSMContext):
 
 
 @router.message(IsAdmin(), F.text == add_product)
-async def process_add_product(message: Message):
+async def process_add_product(message: Message, state: FSMContext):
 
-    await ProductState.title.set()
+    await state.set(ProductState.title)
 
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[[cancel_message]])
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[[KeyboardButton(text=cancel_message)]])
 
     await message.answer("Название?", reply_markup=markup)
 
@@ -140,14 +147,14 @@ async def process_title(message: Message, state: FSMContext):
     data["title"] = message.text
     await state.update_data(**data)
 
-    await ProductState.next()
+    await state.set(ProductState.body)
     await message.answer("Описание?", reply_markup=back_markup())
 
 
 @router.message(IsAdmin(), F.text == back_message, state=ProductState.body)
 async def process_body_back(message: Message, state: FSMContext):
 
-    await ProductState.title.set()
+    await state.set(ProductState.title)
 
     data = await state.get_data()
 
@@ -163,7 +170,7 @@ async def process_body(message: Message, state: FSMContext):
     data["body"] = message.text
     await state.update_data(**data)
 
-    await ProductState.next()
+    await state.set(ProductState.image)
     await message.answer("Фото?", reply_markup=back_markup())
 
 
@@ -187,7 +194,7 @@ async def process_image_url(message: Message, state: FSMContext):
 
     if message.text == back_message:
 
-        await ProductState.body.set()
+        await state.set(ProductState.body)
 
         data = await state.get_data()
 
@@ -205,7 +212,7 @@ async def process_price_invalid(message: Message, state: FSMContext):
 
     if message.text == back_message:
 
-        await ProductState.image.set()
+        await state.set(ProductState.image)
 
         data = await state.get_data()
 
@@ -227,7 +234,7 @@ async def process_price(message: Message, state: FSMContext):
     body = data["body"]
     price = data["price"]
 
-    await ProductState.next()
+    await state.set(ProductState.confirm)
     text = f"<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей."
 
     markup = check_markup()
@@ -247,7 +254,7 @@ async def process_confirm_invalid(message: Message, state: FSMContext):
 @router.message(IsAdmin(), F.text == back_message, state=ProductState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
 
-    await ProductState.price.set()
+    await state.set(ProductState.price)
 
     data = await state.get_data()
 
@@ -284,13 +291,17 @@ async def process_confirm(message: Message, state: FSMContext):
 # delete product
 
 
-@router.callback_query(IsAdmin(), F.text.startswith("product_delete_"))
+@router.callback_query(IsAdmin(), F.data.startswith("product_delete_"))
 async def delete_product_callback_handler(query: CallbackQuery, state: FSMContext):
 
-    product_idx = int(query.text.split("_")[-1])
+    if query.data is None:
+        return
+        
+    product_idx = int(query.data.split("_")[-1])
     db.query("DELETE FROM products WHERE idx=?", (product_idx,))
     await query.answer("Удалено!")
-    await query.message.delete()
+    if query.message:
+        await query.message.delete()
 
 
 async def show_products(m, products, category_idx):
@@ -316,6 +327,6 @@ async def show_products(m, products, category_idx):
 
         await m.answer_photo(photo=image, caption=text, reply_markup=markup)
 
-    markup = ReplyKeyboardMarkup(keyboard=[[add_product], [delete_category]])
+    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=add_product)], [KeyboardButton(text=delete_category)]])
 
     await m.answer("Хотите что-нибудь добавить или удалить?", reply_markup=markup)

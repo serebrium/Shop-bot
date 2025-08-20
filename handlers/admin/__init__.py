@@ -1,5 +1,5 @@
-from .add import dp
-from .questions import dp
-from .orders import dp
+from .add import router as add_router
+from .questions import router as questions_router
+from .orders import router as orders_router
 
-__all__ = ["dp"]
+__all__ = ["add_router", "questions_router", "orders_router"]

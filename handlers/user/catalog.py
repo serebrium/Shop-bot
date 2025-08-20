@@ -28,10 +28,13 @@ async def process_catalog(message: Message):
     await message.answer("Выберите категорию:", reply_markup=categories_markup())
 
 
-@router.callback_query(IsUser(), F.text.startswith("category_view_"))
+@router.callback_query(IsUser(), F.data.startswith("category_view_"))
 async def category_callback_handler(query: CallbackQuery):
 
-    category_idx = int(query.text.split("_")[-1])
+    if query.data is None:
+        return
+        
+    category_idx = int(query.data.split("_")[-1])
 
     products = db.fetchall(
         """SELECT * FROM products product
@@ -39,15 +42,24 @@ async def category_callback_handler(query: CallbackQuery):
         (category_idx,),
     )
 
-    await query.message.delete()
+    if query.message:
+        await query.message.delete()
     await query.answer("Все товары в этой категории.")
-    await show_products(query.message, products)
+    if query.message:
+        await show_products(query.message, products)
 
 
-@router.callback_query(IsUser(), F.text.startswith("product_add_"))
+@router.callback_query(IsUser(), F.data.startswith("product_add_"))
 async def add_product_callback_handler(query: CallbackQuery):
 
-    product_idx = int(query.text.split("_")[-1])
+    if query.data is None:
+        return
+        
+    product_idx = int(query.data.split("_")[-1])
+    
+    if query.message is None:
+        return
+        
     cid = query.message.chat.id
 
     db.query("INSERT INTO cart VALUES (?, ?, ?)", (cid, product_idx, 1))

@@ -8,4 +8,6 @@ class IsAdmin(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:
         """Проверяет, является ли пользователь администратором"""
+        if message.from_user is None:
+            return False
         return message.from_user.id in ADMINS

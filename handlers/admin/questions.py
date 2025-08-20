@@ -5,6 +5,7 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
+    ReplyKeyboardRemove,
 )
 from states import AnswerState
 from loader import get_db
@@ -51,15 +52,19 @@ async def questions_answer(message, questions):
     await message.answer(res, reply_markup=markup)
 
 
-@router.callback_query(IsAdmin(), F.text.startswith("question_answer_"))
+@router.callback_query(IsAdmin(), F.data.startswith("question_answer_"))
 async def process_answer(query: CallbackQuery, state: FSMContext):
 
-    question_id = int(query.text.split("_")[-1])
+    if query.data is None:
+        return
+        
+    question_id = int(query.data.split("_")[-1])
 
     await state.update_data(question_id=question_id)
-    await AnswerState.answer.set()
+    await state.set(AnswerState.answer)
 
-    await query.message.answer("Введите ответ на вопрос:")
+    if query.message:
+        await query.message.answer("Введите ответ на вопрос:")
     await query.answer()
 
 
@@ -70,13 +75,13 @@ async def process_submit(message: Message, state: FSMContext):
     answer = message.text
 
     await state.update_data(answer=answer)
-    await AnswerState.submit.set()
+    await state.set(AnswerState.submit)
 
     await message.answer(f"Ответ: {answer}\n\nОтправить?", reply_markup=submit_markup())
 
 
 @router.message(IsAdmin(), F.text == cancel_message, state=AnswerState.submit)
-async def process_send_answer(message: Message, state: FSMContext):
+async def process_cancel_answer(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Отменено!", reply_markup=ReplyKeyboardRemove())
 

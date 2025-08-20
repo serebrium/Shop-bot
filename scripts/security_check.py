@@ -54,7 +54,7 @@ def check_outdated_packages() -> List[str]:
 
 def check_security_issues() -> Dict[str, List[str]]:
     """Проверяет известные проблемы безопасности"""
-    issues = {"critical": [], "high": [], "medium": [], "low": []}
+    issues: Dict[str, List[str]] = {"critical": [], "high": [], "medium": [], "low": []}
 
     # Проверяем Jinja2
     packages = check_pip_list()

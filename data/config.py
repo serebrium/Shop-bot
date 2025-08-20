@@ -24,11 +24,11 @@ PROJECT_NAME = os.getenv("PROJECT_NAME")
 # WEBHOOK_PATH = '/webhook/' + BOT_TOKEN
 
 # Railway webhook
-WEBHOOK_HOST = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+RAILWAY_HOST = os.getenv("RAILWAY_PUBLIC_DOMAIN")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
 
-if WEBHOOK_HOST and WEBHOOK_PATH:
-    WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+if RAILWAY_HOST and WEBHOOK_PATH:
+    WEBHOOK_URL = f"{RAILWAY_HOST}{WEBHOOK_PATH}"
 else:
     WEBHOOK_URL = None
 
@@ -56,5 +56,5 @@ LOG_FILE = os.getenv("LOG_FILE", "bot.log")
 DB_PATH = os.getenv("DB_PATH", "data/database.db")
 
 # Настройки webhook
-WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "0.0.0.0")
-WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "5000"))
+WEBHOOK_HOST: str = str(os.getenv("WEBHOOK_HOST", "0.0.0.0"))
+WEBHOOK_PORT: int = int(os.getenv("WEBHOOK_PORT", "5000"))
