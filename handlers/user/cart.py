@@ -195,10 +195,10 @@ async def process_address(message: Message, state: FSMContext):
     
     await CheckoutState.confirm.set()
     
-    await confirm(message)
+    await confirm(message, state)
 
 
-async def confirm(message):
+async def confirm(message, state):
     
     data = await state.get_data()
     name = data['name']

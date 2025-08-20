@@ -41,8 +41,8 @@ class TestDatabaseManager:
         """Тест вставки и получения данных"""
         temp_db.create_tables()
         
-        # Вставляем тестовую категорию
-        temp_db.query('INSERT INTO categories VALUES (?, ?)', ('test_idx', 'Test Category'))
+        # Вставляем тестовую категорию (idx, title, created_at)
+        temp_db.query('INSERT INTO categories (idx, title) VALUES (?, ?)', ('test_idx', 'Test Category'))
         
         # Получаем данные
         result = temp_db.fetchone('SELECT * FROM categories WHERE idx = ?', ('test_idx',))
