@@ -1,4 +1,3 @@
-
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -12,41 +11,47 @@ router = Router()
 # Получаем базу данных
 db = get_db()
 
-@router.message(commands='sos')
+
+@router.message(commands="sos")
 async def cmd_sos(message: Message):
-    await message.answer('Опишите вашу проблему:')
+    await message.answer("Опишите вашу проблему:")
     await SosState.question.set()
 
 
 @router.message(state=SosState.question)
 async def process_question(message: Message, state: FSMContext):
-    
+
     question = message.text
     await state.update_data(question=question)
     await SosState.submit.set()
-    
-    await message.answer(f'Вопрос: {question}\n\nОтправить?', reply_markup=submit_markup())
+
+    await message.answer(
+        f"Вопрос: {question}\n\nОтправить?", reply_markup=submit_markup()
+    )
 
 
-@router.message(lambda message: message.text not in [cancel_message, all_right_message], state=SosState.submit)
+@router.message(
+    lambda message: message.text not in [cancel_message, all_right_message],
+    state=SosState.submit,
+)
 async def process_price_invalid(message: Message):
-    await message.answer('Такого варианта не было.')
+    await message.answer("Такого варианта не было.")
 
 
 @router.message(F.text == cancel_message, state=SosState.submit)
 async def process_cancel(message: Message, state: FSMContext):
     await state.clear()
-    await message.answer('Отменено!', reply_markup=ReplyKeyboardRemove())
+    await message.answer("Отменено!", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(F.text == all_right_message, state=SosState.submit)
 async def process_submit(message: Message, state: FSMContext):
-    
+
     data = await state.get_data()
-    question = data['question']
+    question = data["question"]
     cid = message.chat.id
-    
-    db.query('INSERT INTO questions VALUES (?, ?)', (cid, question))
-    
+
+    db.query("INSERT INTO questions VALUES (?, ?)", (cid, question))
+
     await state.clear()
-    await message.answer('Вопрос отправлен!', reply_markup=ReplyKeyboardRemove())
+    await message.answer("Вопрос отправлен!", reply_markup=ReplyKeyboardRemove())

@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Проверяем существование .env файла
-env_path = Path('.env')
+env_path = Path(".env")
 if env_path.exists():
     load_dotenv()
 else:

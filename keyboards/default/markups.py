@@ -2,37 +2,58 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from typing import List
 
 # Константы для сообщений
-back_message = '👈 Назад'
-confirm_message = '✅ Подтвердить заказ'
-all_right_message = '✅ Все верно'
-cancel_message = '🚫 Отменить'
+back_message = "👈 Назад"
+confirm_message = "✅ Подтвердить заказ"
+all_right_message = "✅ Все верно"
+cancel_message = "🚫 Отменить"
+
 
 def confirm_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для подтверждения заказа"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[confirm_message], [back_message]])
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        selective=True,
+        keyboard=[[confirm_message], [back_message]],
+    )
     return markup
+
 
 def back_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру с кнопкой назад"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[back_message]])
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True, selective=True, keyboard=[[back_message]]
+    )
     return markup
+
 
 def check_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для проверки данных"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[back_message, all_right_message]])
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        selective=True,
+        keyboard=[[back_message, all_right_message]],
+    )
     return markup
+
 
 def submit_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для отправки"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[cancel_message, all_right_message]])
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        selective=True,
+        keyboard=[[cancel_message, all_right_message]],
+    )
     return markup
 
-def create_markup_from_list(buttons: List[str], row_width: int = 2) -> ReplyKeyboardMarkup:
+
+def create_markup_from_list(
+    buttons: List[str], row_width: int = 2
+) -> ReplyKeyboardMarkup:
     """Создает клавиатуру из списка кнопок"""
     markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    
+
     for i in range(0, len(buttons), row_width):
-        row = buttons[i:i + row_width]
+        row = buttons[i : i + row_width]
         markup.row(*row)
-    
+
     return markup

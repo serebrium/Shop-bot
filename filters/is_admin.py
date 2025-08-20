@@ -1,7 +1,7 @@
-
 from aiogram.types import Message
 from aiogram.filters import BaseFilter
 from data.config import ADMINS
+
 
 class IsAdmin(BaseFilter):
     """Фильтр для проверки администратора"""

@@ -5,4 +5,4 @@ from .catalog import dp
 from .delivery_status import dp
 from .sos import dp
 
-__all__ = ['dp']
+__all__ = ["dp"]
