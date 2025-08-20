@@ -230,7 +230,10 @@ class DatabaseManager(object):
             logger.error(f"Ошибка закрытия БД: {e}")
 
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except:
+            pass
 
 
 '''

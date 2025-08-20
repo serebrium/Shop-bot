@@ -12,7 +12,7 @@ from .menu import balance
 # shopArticleId 538350
 
 
-@dp.message_handler(IsUser(), text=balance)
+@dp.message(IsUser(), F.text == balance)
 async def process_balance(message: Message, state: FSMContext):
     await message.answer('Ваш кошелек пуст! Чтобы его пополнить нужно...')
 

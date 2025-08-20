@@ -1,10 +1,11 @@
 import logging
-from aiogram.dispatcher import FSMContext
+from aiogram.fsm.context import FSMContext
+from aiogram import F
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards.inline.products_from_cart import product_markup, product_cb
-from aiogram.utils.callback_data import CallbackData
+from aiogram.filters.callback_data import CallbackData
 from keyboards.default.markups import *
-from aiogram.types.chat import ChatActions
+from aiogram.types import ChatAction
 from states import CheckoutState
 from loader import get_dispatcher, db, get_bot
 from filters import IsUser
@@ -16,7 +17,7 @@ bot = get_bot()
 
 
 
-@dp.message_handler(IsUser(), text=cart)
+@dp.message(IsUser(), F.text == cart)
 async def process_cart(message: Message, state: FSMContext):
 
     cart_data = db.fetchall(
@@ -28,9 +29,10 @@ async def process_cart(message: Message, state: FSMContext):
 
     else:
 
-        await bot.send_chat_action(message.chat.id, ChatActions.TYPING)
-        async with state.proxy() as data:
-            data['products'] = {}
+        await bot.send_chat_action(message.chat.id, "typing")
+        data = await state.get_data()
+        data['products'] = {}
+        await state.update_data(**data)
 
         order_cost = 0
 
@@ -57,16 +59,15 @@ async def process_cart(message: Message, state: FSMContext):
                                            reply_markup=markup)
 
         if order_cost != 0:
-            markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-            markup.add('📦 Оформить заказ')
+            markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[['📦 Оформить заказ']])
 
             await message.answer('Перейти к оформлению?',
                                  reply_markup=markup)
 
 
-@dp.callback_query_handler(IsUser(), product_cb.filter(action='count'))
-@dp.callback_query_handler(IsUser(), product_cb.filter(action='increase'))
-@dp.callback_query_handler(IsUser(), product_cb.filter(action='decrease'))
+@dp.callback_query(IsUser(), product_cb.filter(action='count'))
+@dp.callback_query(IsUser(), product_cb.filter(action='increase'))
+@dp.callback_query(IsUser(), product_cb.filter(action='decrease'))
 async def product_callback_handler(query: CallbackQuery, callback_data: dict, state: FSMContext):
 
     idx = callback_data['id']
@@ -112,7 +113,7 @@ async def product_callback_handler(query: CallbackQuery, callback_data: dict, st
                     await query.message.edit_reply_markup(product_markup(idx, count_in_cart))
 
 
-@dp.message_handler(IsUser(), text='📦 Оформить заказ')
+@dp.message(IsUser(), F.text == '📦 Оформить заказ')
 async def process_checkout(message: Message, state: FSMContext):
 
     await CheckoutState.check_cart.set()
@@ -135,31 +136,31 @@ async def checkout(message, state):
                          reply_markup=check_markup())
 
 
-@dp.message_handler(IsUser(), lambda message: message.text not in [all_right_message, back_message], state=CheckoutState.check_cart)
+@dp.message(IsUser(), lambda message: message.text not in [all_right_message, back_message], state=CheckoutState.check_cart)
 async def process_check_cart_invalid(message: Message):
     await message.reply('Такого варианта не было.')
 
 
-@dp.message_handler(IsUser(), text=back_message, state=CheckoutState.check_cart)
+@dp.message(IsUser(), F.text == back_message, state=CheckoutState.check_cart)
 async def process_check_cart_back(message: Message, state: FSMContext):
-    await state.finish()
+    await state.clear()
     await process_cart(message, state)
 
 
-@dp.message_handler(IsUser(), text=all_right_message, state=CheckoutState.check_cart)
+@dp.message(IsUser(), F.text == all_right_message, state=CheckoutState.check_cart)
 async def process_check_cart_all_right(message: Message, state: FSMContext):
     await CheckoutState.next()
     await message.answer('Укажите свое имя.',
                          reply_markup=back_markup())
 
 
-@dp.message_handler(IsUser(), text=back_message, state=CheckoutState.name)
+@dp.message(IsUser(), F.text == back_message, state=CheckoutState.name)
 async def process_name_back(message: Message, state: FSMContext):
     await CheckoutState.check_cart.set()
     await checkout(message, state)
 
 
-@dp.message_handler(IsUser(), state=CheckoutState.name)
+@dp.message(IsUser(), state=CheckoutState.name)
 async def process_name(message: Message, state: FSMContext):
 
     async with state.proxy() as data:
@@ -178,7 +179,7 @@ async def process_name(message: Message, state: FSMContext):
                                  reply_markup=back_markup())
 
 
-@dp.message_handler(IsUser(), text=back_message, state=CheckoutState.address)
+@dp.message(IsUser(), F.text == back_message, state=CheckoutState.address)
 async def process_address_back(message: Message, state: FSMContext):
 
     async with state.proxy() as data:
@@ -189,7 +190,7 @@ async def process_address_back(message: Message, state: FSMContext):
     await CheckoutState.name.set()
 
 
-@dp.message_handler(IsUser(), state=CheckoutState.address)
+@dp.message(IsUser(), state=CheckoutState.address)
 async def process_address(message: Message, state: FSMContext):
 
     async with state.proxy() as data:
@@ -205,12 +206,12 @@ async def confirm(message):
                          reply_markup=confirm_markup())
 
 
-@dp.message_handler(IsUser(), lambda message: message.text not in [confirm_message, back_message], state=CheckoutState.confirm)
+@dp.message(IsUser(), lambda message: message.text not in [confirm_message, back_message], state=CheckoutState.confirm)
 async def process_confirm_invalid(message: Message):
     await message.reply('Такого варианта не было.')
 
 
-@dp.message_handler(IsUser(), text=back_message, state=CheckoutState.confirm)
+@dp.message(IsUser(), F.text == back_message, state=CheckoutState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
 
     await CheckoutState.address.set()
@@ -220,7 +221,7 @@ async def process_confirm(message: Message, state: FSMContext):
                              reply_markup=back_markup())
 
 
-@dp.message_handler(IsUser(), text=confirm_message, state=CheckoutState.confirm)
+@dp.message(IsUser(), F.text == confirm_message, state=CheckoutState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
 
     enough_money = True  # enough money on the balance sheet
@@ -235,7 +236,7 @@ async def process_confirm(message: Message, state: FSMContext):
             cid = message.chat.id
             products = [idx + '=' + str(quantity)
                         for idx, quantity in db.fetchall('''SELECT idx, quantity FROM cart
-            WHERE cid=?''', (cid,))]  # idx=quantity
+                        WHERE cid=?''', (cid,))]  # idx=quantity
 
             db.query('INSERT INTO orders VALUES (?, ?, ?, ?)',
                      (cid, data['name'], data['address'], ' '.join(products)))
@@ -249,4 +250,4 @@ async def process_confirm(message: Message, state: FSMContext):
         await message.answer('У вас недостаточно денег на счете. Пополните баланс!',
                              reply_markup=markup)
 
-    await state.finish()
+    await state.clear()

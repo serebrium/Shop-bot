@@ -9,27 +9,22 @@ cancel_message = '🚫 Отменить'
 
 def confirm_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для подтверждения заказа"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add(confirm_message)
-    markup.add(back_message)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[confirm_message], [back_message]])
     return markup
 
 def back_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру с кнопкой назад"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add(back_message)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[back_message]])
     return markup
 
 def check_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для проверки данных"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.row(back_message, all_right_message)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[back_message, all_right_message]])
     return markup
 
 def submit_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру для отправки"""
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.row(cancel_message, all_right_message)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=[[cancel_message, all_right_message]])
     return markup
 
 def create_markup_from_list(buttons: List[str], row_width: int = 2) -> ReplyKeyboardMarkup:

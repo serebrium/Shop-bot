@@ -58,3 +58,4 @@ class TestDatabaseManager:
         # Пытаемся выполнить неверный запрос
         with pytest.raises(Exception):
             temp_db.query('INVALID SQL QUERY')
+
