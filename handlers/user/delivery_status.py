@@ -14,7 +14,6 @@ delivery_status = "🚚 Статус заказа"
 
 @router.message(IsUser(), F.text == delivery_status)
 async def process_delivery_status(message: Message):
-
     cid = message.chat.id
 
     orders = db.fetchall("SELECT * FROM orders WHERE cid = ?", (cid,))

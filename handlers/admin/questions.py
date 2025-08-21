@@ -25,7 +25,6 @@ questions = "❓ Вопросы"
 
 @router.message(IsAdmin(), F.text == questions)
 async def process_questions(message: Message):
-
     questions = db.fetchall("SELECT * FROM questions")
 
     if len(questions) == 0:
@@ -55,10 +54,9 @@ async def questions_answer(message, questions):
 
 @router.callback_query(IsAdmin(), F.data.startswith("question_answer_"))
 async def process_answer(query: CallbackQuery, state: FSMContext):
-
     if query.data is None:
         return
-        
+
     try:
         question_id = int(query.data.split("_")[-1])
     except (ValueError, IndexError):
@@ -75,7 +73,6 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
 
 @router.message(IsAdmin(), AnswerState.answer)
 async def process_submit(message: Message, state: FSMContext):
-
     data = await state.get_data()
     answer = validate_text_input(message.text, max_length=1000)
     if not answer:
@@ -96,7 +93,6 @@ async def process_cancel_answer(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == all_right_message, AnswerState.submit)
 async def process_send_answer(message: Message, state: FSMContext):
-
     data = await state.get_data()
     question_id = data["question_id"]
     answer = data["answer"]

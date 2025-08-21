@@ -19,5 +19,3 @@ async def save_image(image_data: bytes) -> str:
     """Сохраняет изображение асинхронно и возвращает путь (str)."""
     # Для простоты используем синхронную запись, I/O здесь короткое
     return save_image_sync(image_data)
-
-

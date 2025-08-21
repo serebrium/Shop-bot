@@ -13,7 +13,10 @@ def confirm_markup() -> ReplyKeyboardMarkup:
     markup = ReplyKeyboardMarkup(
         resize_keyboard=True,
         selective=True,
-        keyboard=[[KeyboardButton(text=confirm_message)], [KeyboardButton(text=back_message)]],
+        keyboard=[
+            [KeyboardButton(text=confirm_message)],
+            [KeyboardButton(text=back_message)],
+        ],
     )
     return markup
 
@@ -21,7 +24,9 @@ def confirm_markup() -> ReplyKeyboardMarkup:
 def back_markup() -> ReplyKeyboardMarkup:
     """Создает клавиатуру с кнопкой назад"""
     markup = ReplyKeyboardMarkup(
-        resize_keyboard=True, selective=True, keyboard=[[KeyboardButton(text=back_message)]]
+        resize_keyboard=True,
+        selective=True,
+        keyboard=[[KeyboardButton(text=back_message)]],
     )
     return markup
 
@@ -31,7 +36,9 @@ def check_markup() -> ReplyKeyboardMarkup:
     markup = ReplyKeyboardMarkup(
         resize_keyboard=True,
         selective=True,
-        keyboard=[[KeyboardButton(text=back_message), KeyboardButton(text=all_right_message)]],
+        keyboard=[
+            [KeyboardButton(text=back_message), KeyboardButton(text=all_right_message)]
+        ],
     )
     return markup
 
@@ -41,7 +48,12 @@ def submit_markup() -> ReplyKeyboardMarkup:
     markup = ReplyKeyboardMarkup(
         resize_keyboard=True,
         selective=True,
-        keyboard=[[KeyboardButton(text=cancel_message), KeyboardButton(text=all_right_message)]],
+        keyboard=[
+            [
+                KeyboardButton(text=cancel_message),
+                KeyboardButton(text=all_right_message),
+            ]
+        ],
     )
     return markup
 
@@ -51,13 +63,9 @@ def create_markup_from_list(
 ) -> ReplyKeyboardMarkup:
     """Создает клавиатуру из списка кнопок"""
     keyboard = []
-    
+
     for i in range(0, len(buttons), row_width):
         row = buttons[i : i + row_width]
         keyboard.append([KeyboardButton(text=btn) for btn in row])
-    
-    return ReplyKeyboardMarkup(
-        resize_keyboard=True, 
-        selective=True,
-        keyboard=keyboard
-    )
+
+    return ReplyKeyboardMarkup(resize_keyboard=True, selective=True, keyboard=keyboard)

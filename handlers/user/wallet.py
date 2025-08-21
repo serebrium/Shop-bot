@@ -16,7 +16,6 @@ balance = "💰 Баланс"
 
 @router.message(IsUser(), F.text == balance)
 async def process_balance(message: Message, state: FSMContext):
-
     cid = message.chat.id
 
     wallet = db.fetchone("SELECT balance FROM wallet WHERE cid = ?", (cid,))

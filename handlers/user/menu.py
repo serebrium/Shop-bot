@@ -26,8 +26,8 @@ async def admin_menu(message: Message):
         selective=True,
         keyboard=[
             [KeyboardButton(text=settings)],
-            [KeyboardButton(text=questions), KeyboardButton(text=orders)]
-        ]
+            [KeyboardButton(text=questions), KeyboardButton(text=orders)],
+        ],
     )
 
     await message.answer("Меню", reply_markup=markup)
@@ -40,8 +40,8 @@ async def user_menu(message: Message):
         keyboard=[
             [KeyboardButton(text=catalog)],
             [KeyboardButton(text=balance), KeyboardButton(text=cart)],
-            [KeyboardButton(text=delivery_status)]
-        ]
+            [KeyboardButton(text=delivery_status)],
+        ],
     )
 
     await message.answer("Меню", reply_markup=markup)

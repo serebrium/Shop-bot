@@ -14,7 +14,6 @@ orders = "🚚 Заказы"
 
 @router.message(IsAdmin(), F.text == orders)
 async def process_orders(message: Message):
-
     orders = db.fetchall("SELECT * FROM orders")
 
     if len(orders) == 0:

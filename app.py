@@ -120,7 +120,6 @@ async def main():
 
 
 if __name__ == "__main__":
-
     # Проверяем наличие переменных для webhook
     has_webhook_vars = ("HEROKU_APP_NAME" in list(os.environ.keys())) or (
         "RAILWAY_PUBLIC_DOMAIN" in list(os.environ.keys())

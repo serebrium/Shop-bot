@@ -17,7 +17,7 @@ def validate_text_input(text: str, max_length: int = 1000) -> Optional[str]:
     """Валидация текстового ввода"""
     if not text or len(text) > max_length:
         return None
-    cleaned = re.sub("[<>\"'&]", '', text)
+    cleaned = re.sub("[<>\"'&]", "", text)
     return cleaned.strip()
 
 
@@ -26,5 +26,3 @@ def validate_callback_data(data: str, expected_prefix: str) -> Optional[str]:
     if not data or not data.startswith(expected_prefix):
         return None
     return data
-
-

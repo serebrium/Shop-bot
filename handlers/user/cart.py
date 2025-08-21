@@ -28,7 +28,6 @@ cart = "🛒 Корзина"
 
 @router.message(IsUser(), F.text == cart)
 async def process_cart(message: Message, state: FSMContext):
-
     cid = message.chat.id
 
     cart_products = db.fetchall(
@@ -44,7 +43,6 @@ async def process_cart(message: Message, state: FSMContext):
         await message.answer("Корзина:", reply_markup=ReplyKeyboardRemove())
 
         for idx, title, price, quantity in cart_products:
-
             markup = product_markup(idx, quantity)
 
             await message.answer(
@@ -61,15 +59,14 @@ async def process_cart(message: Message, state: FSMContext):
 
 @router.callback_query(IsUser(), F.data.startswith("product_"))
 async def product_callback_handler(query: CallbackQuery, state: FSMContext):
-
     if query.message is None:
         return
-    
+
     cid = query.message.chat.id
     callback_data = query.data
     if callback_data is None:
         return
-        
+
     try:
         parts = callback_data.split("_")
         action = parts[1]
@@ -85,9 +82,21 @@ async def product_callback_handler(query: CallbackQuery, state: FSMContext):
 
         markup = ReplyKeyboardMarkup(
             keyboard=[
-                [KeyboardButton(text="1"), KeyboardButton(text="2"), KeyboardButton(text="3")],
-                [KeyboardButton(text="4"), KeyboardButton(text="5"), KeyboardButton(text="6")],
-                [KeyboardButton(text="7"), KeyboardButton(text="8"), KeyboardButton(text="9")],
+                [
+                    KeyboardButton(text="1"),
+                    KeyboardButton(text="2"),
+                    KeyboardButton(text="3"),
+                ],
+                [
+                    KeyboardButton(text="4"),
+                    KeyboardButton(text="5"),
+                    KeyboardButton(text="6"),
+                ],
+                [
+                    KeyboardButton(text="7"),
+                    KeyboardButton(text="8"),
+                    KeyboardButton(text="9"),
+                ],
                 [KeyboardButton(text=back_message)],
             ],
             resize_keyboard=True,
@@ -123,7 +132,6 @@ async def product_callback_handler(query: CallbackQuery, state: FSMContext):
 
 @router.message(IsUser(), F.text == "📦 Оформить заказ")
 async def process_checkout(message: Message, state: FSMContext):
-
     cid = message.chat.id
 
     cart_products = db.fetchall(
@@ -141,7 +149,6 @@ async def process_checkout(message: Message, state: FSMContext):
 
 
 async def checkout(message, state):
-
     cid = message.chat.id
 
     cart_products = db.fetchall(
@@ -183,17 +190,17 @@ async def process_check_cart_back(message: Message, state: FSMContext):
 
 @router.message(IsUser(), F.text == all_right_message, CheckoutState.check_cart)
 async def process_check_cart_all_right(message: Message, state: FSMContext):
-
     await state.set(CheckoutState.name)
 
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True)
+    markup = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
+    )
 
     await message.answer("Как вас зовут?", reply_markup=markup)
 
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.name)
 async def process_name_back(message: Message, state: FSMContext):
-
     await state.set(CheckoutState.check_cart)
 
     data = await state.get_data()
@@ -209,34 +216,35 @@ async def process_name_back(message: Message, state: FSMContext):
 
 @router.message(IsUser(), CheckoutState.name)
 async def process_name(message: Message, state: FSMContext):
-
     data = await state.get_data()
     data["name"] = message.text
     await state.update_data(**data)
 
     await state.set(CheckoutState.address)
 
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True)
+    markup = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
+    )
 
     await message.answer("Укажите адрес доставки:", reply_markup=markup)
 
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.address)
 async def process_address_back(message: Message, state: FSMContext):
-
     await state.set(CheckoutState.name)
 
     data = await state.get_data()
     name = data["name"]
 
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True)
+    markup = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
+    )
 
     await message.answer(f"Изменить имя с <b>{name}</b>?", reply_markup=markup)
 
 
 @router.message(IsUser(), CheckoutState.address)
 async def process_address(message: Message, state: FSMContext):
-
     data = await state.get_data()
     data["address"] = message.text
     await state.update_data(**data)
@@ -247,7 +255,6 @@ async def process_address(message: Message, state: FSMContext):
 
 
 async def confirm(message, state):
-
     data = await state.get_data()
     name = data["name"]
     address = data["address"]
@@ -271,20 +278,20 @@ async def process_confirm_invalid(message: Message):
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
-
     await state.set(CheckoutState.address)
 
     data = await state.get_data()
     address = data["address"]
 
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True)
+    markup = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
+    )
 
     await message.answer(f"Изменить адрес с <b>{address}</b>?", reply_markup=markup)
 
 
 @router.message(IsUser(), F.text == confirm_message, CheckoutState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
-
     data = await state.get_data()
     name = data["name"]
     address = data["address"]

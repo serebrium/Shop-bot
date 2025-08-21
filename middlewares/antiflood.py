@@ -13,7 +13,7 @@ class AntiFloodMiddleware(BaseMiddleware):
         self,
         handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
         event: Message,
-        data: Dict[str, Any]
+        data: Dict[str, Any],
     ) -> Any:
         if not event.from_user:
             return await handler(event, data)
@@ -28,5 +28,3 @@ class AntiFloodMiddleware(BaseMiddleware):
 
         self.user_last_message[user_id] = current_time
         return await handler(event, data)
-
-

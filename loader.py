@@ -76,7 +76,14 @@ def get_db():
 def register_routers():
     """Регистрирует все роутеры в диспетчере"""
     from handlers.admin import add_router, orders_router, questions_router
-    from handlers.user import menu_router, catalog_router, cart_router, wallet_router, sos_router, delivery_router
+    from handlers.user import (
+        menu_router,
+        catalog_router,
+        cart_router,
+        wallet_router,
+        sos_router,
+        delivery_router,
+    )
 
     dp = get_dispatcher()
 

@@ -33,7 +33,6 @@ delete_category = "🗑️ Удалить категорию"
 
 @router.message(IsAdmin(), F.text == settings)
 async def process_settings(message: Message):
-
     markup = InlineKeyboardMarkup(inline_keyboard=[])
 
     for idx, title in db.fetchall("SELECT * FROM categories"):
@@ -54,10 +53,9 @@ async def process_settings(message: Message):
 
 @router.callback_query(IsAdmin(), F.data.startswith("category_view_"))
 async def category_callback_handler(query: CallbackQuery, state: FSMContext):
-
     if query.data is None:
         return
-        
+
     try:
         category_idx = int(query.data.split("_")[-1])
     except (ValueError, IndexError):
@@ -91,7 +89,6 @@ async def add_category_callback_handler(query: CallbackQuery, state: FSMContext)
 
 @router.message(IsAdmin(), CategoryState.title)
 async def set_category_title_handler(message: Message, state: FSMContext):
-
     category_input = validate_text_input(message.text, max_length=100)
     if not category_input:
         await message.answer("Укажите корректное название (до 100 символов)")
@@ -106,11 +103,9 @@ async def set_category_title_handler(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == delete_category)
 async def delete_category_handler(message: Message, state: FSMContext):
-
     data = await state.get_data()
 
     if "category_index" in data.keys():
-
         idx = data["category_index"]
 
         db.query(
@@ -128,17 +123,17 @@ async def delete_category_handler(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == add_product)
 async def process_add_product(message: Message, state: FSMContext):
-
     await state.set(ProductState.title)
 
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=[[KeyboardButton(text=cancel_message)]])
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True, keyboard=[[KeyboardButton(text=cancel_message)]]
+    )
 
     await message.answer("Название?", reply_markup=markup)
 
 
 @router.message(IsAdmin(), F.text == cancel_message, ProductState.title)
 async def process_cancel(message: Message, state: FSMContext):
-
     await message.answer("Ок, отменено!", reply_markup=ReplyKeyboardRemove())
     await state.clear()
 
@@ -152,7 +147,6 @@ async def process_title_back(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), ProductState.title)
 async def process_title(message: Message, state: FSMContext):
-
     data = await state.get_data()
     title = validate_text_input(message.text, max_length=100)
     if not title:
@@ -167,7 +161,6 @@ async def process_title(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == back_message, ProductState.body)
 async def process_body_back(message: Message, state: FSMContext):
-
     await state.set(ProductState.title)
 
     data = await state.get_data()
@@ -179,7 +172,6 @@ async def process_body_back(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), ProductState.body)
 async def process_body(message: Message, state: FSMContext):
-
     data = await state.get_data()
     body = validate_text_input(message.text, max_length=1000)
     if not body:
@@ -194,7 +186,6 @@ async def process_body(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.content_type == "photo", ProductState.image)
 async def process_image_photo(message: Message, state: FSMContext):
-
     fileID = message.photo[-1].file_id
     file_info = await get_bot().get_file(fileID)
     downloaded_file = (await get_bot().download_file(file_info.file_path)).read()
@@ -209,9 +200,7 @@ async def process_image_photo(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.content_type == "text", ProductState.image)
 async def process_image_url(message: Message, state: FSMContext):
-
     if message.text == back_message:
-
         await state.set(ProductState.body)
 
         data = await state.get_data()
@@ -221,15 +210,12 @@ async def process_image_url(message: Message, state: FSMContext):
         )
 
     else:
-
         await message.answer("Вам нужно прислать фото товара.")
 
 
 @router.message(IsAdmin(), F.text.regex(r"^[^0-9]+$"), ProductState.price)
 async def process_price_invalid(message: Message, state: FSMContext):
-
     if message.text == back_message:
-
         await state.set(ProductState.image)
 
         data = await state.get_data()
@@ -237,13 +223,11 @@ async def process_price_invalid(message: Message, state: FSMContext):
         await message.answer("Другое изображение?", reply_markup=back_markup())
 
     else:
-
         await message.answer("Укажите цену в виде числа!")
 
 
 @router.message(IsAdmin(), F.text.regex(r"^[0-9]+$"), ProductState.price)
 async def process_price(message: Message, state: FSMContext):
-
     data = await state.get_data()
     price_valid = validate_price(message.text)
     if not price_valid:
@@ -275,7 +259,6 @@ async def process_confirm_invalid(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == back_message, ProductState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
-
     await state.set(ProductState.price)
 
     data = await state.get_data()
@@ -287,7 +270,6 @@ async def process_confirm_back(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == all_right_message, ProductState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
-
     data = await state.get_data()
 
     title = data["title"]
@@ -317,13 +299,12 @@ async def process_confirm(message: Message, state: FSMContext):
 
 @router.callback_query(IsAdmin(), F.data.startswith("product_delete_"))
 async def delete_product_callback_handler(query: CallbackQuery, state: FSMContext):
-
     if query.data is None:
         return
-        
+
     try:
         product_idx = query.data.split("_")[-1]
-    except (IndexError):
+    except IndexError:
         await query.answer("Некорректные данные")
         return
     # Удаляем файл изображения, если есть
@@ -331,6 +312,7 @@ async def delete_product_callback_handler(query: CallbackQuery, state: FSMContex
     if row and row[0]:
         try:
             from pathlib import Path
+
             Path(row[0]).unlink(missing_ok=True)
         except Exception:
             pass
@@ -348,7 +330,6 @@ async def show_products(m, products, category_idx):
     await bot.send_chat_action(m.chat.id, "typing")
 
     for idx, title, body, photo_path, price, tag in products:
-
         text = f"<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей."
 
         markup = InlineKeyboardMarkup(
@@ -363,6 +344,11 @@ async def show_products(m, products, category_idx):
 
         await m.answer_photo(photo=photo_path, caption=text, reply_markup=markup)
 
-    markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=add_product)], [KeyboardButton(text=delete_category)]])
+    markup = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=add_product)],
+            [KeyboardButton(text=delete_category)],
+        ]
+    )
 
     await m.answer("Хотите что-нибудь добавить или удалить?", reply_markup=markup)

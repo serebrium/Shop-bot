@@ -5,7 +5,6 @@ logger = logging.getLogger(__name__)
 
 
 class DatabaseManager(object):
-
     def __init__(self, path):
         try:
             self.conn = lite.connect(path, check_same_thread=False)

@@ -21,7 +21,6 @@ async def cmd_sos(message: Message, state: FSMContext):
 
 @router.message(SosState.question)
 async def process_question(message: Message, state: FSMContext):
-
     question = message.text
     await state.update_data(question=question)
     await state.set(SosState.submit)
@@ -47,7 +46,6 @@ async def process_cancel(message: Message, state: FSMContext):
 
 @router.message(F.text == all_right_message, SosState.submit)
 async def process_submit(message: Message, state: FSMContext):
-
     data = await state.get_data()
     question = data["question"]
     cid = message.chat.id
