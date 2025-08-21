@@ -17,6 +17,8 @@ from handlers.user.menu import settings
 from loader import get_db, get_bot
 from filters import IsAdmin
 from hashlib import md5
+from utils.validators import validate_price, validate_text_input
+from utils.image_storage import save_image
 
 # Создаем роутер для admin обработчиков
 router = Router()
@@ -56,11 +58,15 @@ async def category_callback_handler(query: CallbackQuery, state: FSMContext):
     if query.data is None:
         return
         
-    category_idx = int(query.data.split("_")[-1])
+    try:
+        category_idx = int(query.data.split("_")[-1])
+    except (ValueError, IndexError):
+        await query.answer("Некорректные данные")
+        return
 
     products = db.fetchall(
-        """SELECT * FROM products product
-    WHERE product.tag = (SELECT title FROM categories WHERE idx=?)""",
+        """SELECT idx, title, body, photo_path, price, tag FROM products
+        WHERE tag = (SELECT title FROM categories WHERE idx=?)""",
         (category_idx,),
     )
 
@@ -86,7 +92,11 @@ async def add_category_callback_handler(query: CallbackQuery, state: FSMContext)
 @router.message(IsAdmin(), CategoryState.title)
 async def set_category_title_handler(message: Message, state: FSMContext):
 
-    category = message.text
+    category_input = validate_text_input(message.text, max_length=100)
+    if not category_input:
+        await message.answer("Укажите корректное название (до 100 символов)")
+        return
+    category = category_input
     idx = md5(category.encode("utf-8")).hexdigest()
     db.query("INSERT INTO categories VALUES (?, ?)", (idx, category))
 
@@ -144,7 +154,11 @@ async def process_title_back(message: Message, state: FSMContext):
 async def process_title(message: Message, state: FSMContext):
 
     data = await state.get_data()
-    data["title"] = message.text
+    title = validate_text_input(message.text, max_length=100)
+    if not title:
+        await message.answer("Название слишком длинное или пустое (до 100 символов)")
+        return
+    data["title"] = title
     await state.update_data(**data)
 
     await state.set(ProductState.body)
@@ -167,7 +181,11 @@ async def process_body_back(message: Message, state: FSMContext):
 async def process_body(message: Message, state: FSMContext):
 
     data = await state.get_data()
-    data["body"] = message.text
+    body = validate_text_input(message.text, max_length=1000)
+    if not body:
+        await message.answer("Описание слишком длинное или пустое (до 1000 символов)")
+        return
+    data["body"] = body
     await state.update_data(**data)
 
     await state.set(ProductState.image)
@@ -227,7 +245,11 @@ async def process_price_invalid(message: Message, state: FSMContext):
 async def process_price(message: Message, state: FSMContext):
 
     data = await state.get_data()
-    data["price"] = message.text
+    price_valid = validate_price(message.text)
+    if not price_valid:
+        await message.answer("Укажите корректную цену (число от 1 до 1000000)")
+        return
+    data["price"] = str(price_valid)
     await state.update_data(**data)
 
     title = data["title"]
@@ -278,9 +300,11 @@ async def process_confirm(message: Message, state: FSMContext):
     )[0]
     idx = md5(" ".join([title, body, price, tag]).encode("utf-8")).hexdigest()
 
+    # Сохраняем изображение на диск и сохраняем путь в БД
+    photo_path = await save_image(image)
     db.query(
-        "INSERT INTO products VALUES (?, ?, ?, ?, ?, ?)",
-        (idx, title, body, image, int(price), tag),
+        "INSERT INTO products (idx, title, body, photo_path, price, tag) VALUES (?, ?, ?, ?, ?, ?)",
+        (idx, title, body, photo_path, int(price), tag),
     )
 
     await state.clear()
@@ -297,7 +321,19 @@ async def delete_product_callback_handler(query: CallbackQuery, state: FSMContex
     if query.data is None:
         return
         
-    product_idx = int(query.data.split("_")[-1])
+    try:
+        product_idx = query.data.split("_")[-1]
+    except (IndexError):
+        await query.answer("Некорректные данные")
+        return
+    # Удаляем файл изображения, если есть
+    row = db.fetchone("SELECT photo_path FROM products WHERE idx = ?", (product_idx,))
+    if row and row[0]:
+        try:
+            from pathlib import Path
+            Path(row[0]).unlink(missing_ok=True)
+        except Exception:
+            pass
     db.query("DELETE FROM products WHERE idx=?", (product_idx,))
     await query.answer("Удалено!")
     if query.message:
@@ -311,7 +347,7 @@ async def show_products(m, products, category_idx):
 
     await bot.send_chat_action(m.chat.id, "typing")
 
-    for idx, title, body, image, price, tag in products:
+    for idx, title, body, photo_path, price, tag in products:
 
         text = f"<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей."
 
@@ -325,7 +361,7 @@ async def show_products(m, products, category_idx):
             ]
         )
 
-        await m.answer_photo(photo=image, caption=text, reply_markup=markup)
+        await m.answer_photo(photo=photo_path, caption=text, reply_markup=markup)
 
     markup = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=add_product)], [KeyboardButton(text=delete_category)]])
 

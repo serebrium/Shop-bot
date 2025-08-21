@@ -11,6 +11,7 @@ from states import AnswerState
 from loader import get_db
 from filters import IsAdmin
 from keyboards.default.markups import *
+from utils.validators import validate_text_input
 
 # Создаем роутер для admin обработчиков
 router = Router()
@@ -58,7 +59,11 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
     if query.data is None:
         return
         
-    question_id = int(query.data.split("_")[-1])
+    try:
+        question_id = int(query.data.split("_")[-1])
+    except (ValueError, IndexError):
+        await query.answer("Некорректные данные")
+        return
 
     await state.update_data(question_id=question_id)
     await state.set(AnswerState.answer)
@@ -72,7 +77,10 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
 async def process_submit(message: Message, state: FSMContext):
 
     data = await state.get_data()
-    answer = message.text
+    answer = validate_text_input(message.text, max_length=1000)
+    if not answer:
+        await message.answer("Ответ некорректный (до 1000 символов)")
+        return
 
     await state.update_data(answer=answer)
     await state.set(AnswerState.submit)
@@ -95,7 +103,7 @@ async def process_send_answer(message: Message, state: FSMContext):
 
     # Здесь должна быть логика отправки ответа пользователю
     # Пока просто удаляем вопрос из базы
-    db.query("DELETE FROM questions WHERE idx=?", (question_id,))
+    db.query("DELETE FROM questions WHERE id=?", (question_id,))
 
     await state.clear()
     await message.answer("Ответ отправлен!", reply_markup=ReplyKeyboardRemove())

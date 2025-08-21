@@ -34,11 +34,15 @@ async def category_callback_handler(query: CallbackQuery):
     if query.data is None:
         return
         
-    category_idx = int(query.data.split("_")[-1])
+    try:
+        category_idx = int(query.data.split("_")[-1])
+    except (ValueError, IndexError):
+        await query.answer("Некорректные данные")
+        return
 
     products = db.fetchall(
-        """SELECT * FROM products product
-    WHERE product.tag = (SELECT title FROM categories WHERE idx=?)""",
+        """SELECT idx, title, body, photo_path, price, tag FROM products
+        WHERE tag = (SELECT title FROM categories WHERE idx=?)""",
         (category_idx,),
     )
 
@@ -55,7 +59,11 @@ async def add_product_callback_handler(query: CallbackQuery):
     if query.data is None:
         return
         
-    product_idx = int(query.data.split("_")[-1])
+    try:
+        product_idx = int(query.data.split("_")[-1])
+    except (ValueError, IndexError):
+        await query.answer("Некорректные данные")
+        return
     
     if query.message is None:
         return
@@ -69,10 +77,10 @@ async def add_product_callback_handler(query: CallbackQuery):
 
 async def show_products(m, products):
 
-    for idx, title, body, image, price, tag in products:
+    for idx, title, body, photo_path, price, tag in products:
 
         text = f"<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей."
 
         markup = product_markup(idx, price)
 
-        await m.answer_photo(photo=image, caption=text, reply_markup=markup)
+        await m.answer_photo(photo=photo_path, caption=text, reply_markup=markup)

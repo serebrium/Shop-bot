@@ -146,6 +146,7 @@ Thumbs.db
 
 # Project specific
 data/database.db*
+data/images/*
 *.log
 .env.local
 .env.production

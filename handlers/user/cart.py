@@ -59,7 +59,7 @@ async def process_cart(message: Message, state: FSMContext):
         await message.answer("Хотите оформить заказ?", reply_markup=markup)
 
 
-@router.callback_query(IsUser(), F.text.startswith("product_"))
+@router.callback_query(IsUser(), F.data.startswith("product_"))
 async def product_callback_handler(query: CallbackQuery, state: FSMContext):
 
     if query.message is None:
@@ -70,8 +70,13 @@ async def product_callback_handler(query: CallbackQuery, state: FSMContext):
     if callback_data is None:
         return
         
-    action = callback_data.split("_")[1]
-    idx = int(callback_data.split("_")[2])
+    try:
+        parts = callback_data.split("_")
+        action = parts[1]
+        idx = int(parts[2])
+    except (IndexError, ValueError):
+        await query.answer("Некорректные данные")
+        return
 
     if action == "count":
         await query.answer("Количество товара")

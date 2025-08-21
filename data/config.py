@@ -36,17 +36,17 @@ else:
 REDIS_URL = os.getenv("REDIS_URL")
 
 # Безопасная обработка ADMINS
-admins_str = os.getenv("ADMINS", "")
-if admins_str and admins_str.strip():
+admins_str = os.getenv("ADMINS", "").strip()
+if admins_str:
     try:
-        ADMINS = list(map(int, admins_str.split(",")))
+        ADMINS = tuple(map(int, admins_str.split(",")))
         print(f"✅ Загружено {len(ADMINS)} администраторов")
     except ValueError as e:
         print(f"❌ Ошибка при парсинге ADMINS: {e}")
-        ADMINS = []
+        ADMINS = tuple()
 else:
     print("⚠️  ADMINS не установлены в .env файле")
-    ADMINS = []
+    ADMINS = tuple()
 
 # Настройки логирования
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

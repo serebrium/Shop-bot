@@ -48,7 +48,7 @@ class DatabaseManager(object):
                     idx TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
                     body TEXT,
-                    photo BLOB,
+                    photo_path TEXT,
                     price REAL NOT NULL CHECK (price > 0),
                     tag TEXT,
                     category_idx TEXT,
@@ -143,6 +143,7 @@ class DatabaseManager(object):
                 (1, self._migration_1_add_timestamps),
                 (2, self._migration_2_add_status_fields),
                 (3, self._migration_3_add_foreign_keys),
+                (4, self._migration_4_move_photo_to_path),
             ]
 
             # Применяем новые миграции
@@ -210,6 +211,19 @@ class DatabaseManager(object):
                 pass
         except Exception as e:
             logger.error(f"Ошибка миграции 3: {e}")
+            raise
+
+    def _migration_4_move_photo_to_path(self):
+        """Миграция 4: Перенос фото из BLOB в TEXT (путь к файлу)"""
+        try:
+            # Добавляем колонку photo_path, если её нет
+            try:
+                self.query("ALTER TABLE products ADD COLUMN photo_path TEXT")
+            except:
+                pass
+            # Колонка photo остаётся для обратной совместимости; миграцию данных выполняем на уровне приложения при первом доступе
+        except Exception as e:
+            logger.error(f"Ошибка миграции 4: {e}")
             raise
 
     def query(self, arg, values=None):
