@@ -341,7 +341,7 @@ async def delete_product_callback_handler(query: CallbackQuery, state: FSMContex
             pass
     db.query("DELETE FROM products WHERE idx=?", (product_idx,))
     await query.answer("Удалено!")
-    if query.message and hasattr(query.message, 'delete'):
+    if query.message and hasattr(query.message, "delete"):
         try:
             await query.message.delete()
         except Exception:
