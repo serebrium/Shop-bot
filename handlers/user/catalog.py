@@ -44,8 +44,11 @@ async def category_callback_handler(query: CallbackQuery):
         (category_idx,),
     )
 
-    if query.message:
-        await query.message.delete()
+    if query.message and hasattr(query.message, 'delete'):
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
     await query.answer("Все товары в этой категории.")
     if query.message:
         await show_products(query.message, products)

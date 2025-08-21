@@ -64,7 +64,7 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
         return
 
     await state.update_data(question_id=question_id)
-    await state.set(AnswerState.answer)
+    await state.set_state(AnswerState.answer)
 
     if query.message:
         await query.message.answer("Введите ответ на вопрос:")
@@ -74,13 +74,16 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
 @router.message(IsAdmin(), AnswerState.answer)
 async def process_submit(message: Message, state: FSMContext):
     data = await state.get_data()
+    if not message.text:
+        await message.answer("Получено пустое сообщение")
+        return
     answer = validate_text_input(message.text, max_length=1000)
     if not answer:
         await message.answer("Ответ некорректный (до 1000 символов)")
         return
 
     await state.update_data(answer=answer)
-    await state.set(AnswerState.submit)
+    await state.set_state(AnswerState.submit)
 
     await message.answer(f"Ответ: {answer}\n\nОтправить?", reply_markup=submit_markup())
 

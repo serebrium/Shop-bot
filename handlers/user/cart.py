@@ -78,7 +78,7 @@ async def product_callback_handler(query: CallbackQuery, state: FSMContext):
     if action == "count":
         await query.answer("Количество товара")
         await state.update_data(product_idx=idx)
-        await state.set(CheckoutState.count)
+        await state.set_state(CheckoutState.count)
 
         markup = ReplyKeyboardMarkup(
             keyboard=[
@@ -161,7 +161,7 @@ async def checkout(message, state):
     total_price = sum(price * quantity for _, _, price, quantity in cart_products)
 
     await state.update_data(total_price=total_price)
-    await state.set(CheckoutState.check_cart)
+    await state.set_state(CheckoutState.check_cart)
 
     markup = check_markup()
 
@@ -190,7 +190,7 @@ async def process_check_cart_back(message: Message, state: FSMContext):
 
 @router.message(IsUser(), F.text == all_right_message, CheckoutState.check_cart)
 async def process_check_cart_all_right(message: Message, state: FSMContext):
-    await state.set(CheckoutState.name)
+    await state.set_state(CheckoutState.name)
 
     markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
@@ -201,7 +201,7 @@ async def process_check_cart_all_right(message: Message, state: FSMContext):
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.name)
 async def process_name_back(message: Message, state: FSMContext):
-    await state.set(CheckoutState.check_cart)
+    await state.set_state(CheckoutState.check_cart)
 
     data = await state.get_data()
     total_price = data["total_price"]
@@ -220,7 +220,7 @@ async def process_name(message: Message, state: FSMContext):
     data["name"] = message.text
     await state.update_data(**data)
 
-    await state.set(CheckoutState.address)
+    await state.set_state(CheckoutState.address)
 
     markup = ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=back_message)]], resize_keyboard=True
@@ -231,7 +231,7 @@ async def process_name(message: Message, state: FSMContext):
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.address)
 async def process_address_back(message: Message, state: FSMContext):
-    await state.set(CheckoutState.name)
+    await state.set_state(CheckoutState.name)
 
     data = await state.get_data()
     name = data["name"]
@@ -249,7 +249,7 @@ async def process_address(message: Message, state: FSMContext):
     data["address"] = message.text
     await state.update_data(**data)
 
-    await state.set(CheckoutState.confirm)
+    await state.set_state(CheckoutState.confirm)
 
     await confirm(message, state)
 
@@ -278,7 +278,7 @@ async def process_confirm_invalid(message: Message):
 
 @router.message(IsUser(), F.text == back_message, CheckoutState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
-    await state.set(CheckoutState.address)
+    await state.set_state(CheckoutState.address)
 
     data = await state.get_data()
     address = data["address"]

@@ -69,7 +69,11 @@ async def category_callback_handler(query: CallbackQuery, state: FSMContext):
     )
 
     if query.message:
-        await query.message.delete()
+        if query.message and hasattr(query.message, "delete"):
+            try:
+                await query.message.delete()
+            except Exception:
+                pass
     await query.answer("Все добавленные товары в эту категорию.")
     await state.update_data(category_index=category_idx)
     if query.message:
@@ -82,13 +86,20 @@ async def category_callback_handler(query: CallbackQuery, state: FSMContext):
 @router.callback_query(IsAdmin(), F.data == "add_category")
 async def add_category_callback_handler(query: CallbackQuery, state: FSMContext):
     if query.message:
-        await query.message.delete()
+        if query.message and hasattr(query.message, "delete"):
+            try:
+                await query.message.delete()
+            except Exception:
+                pass
         await query.message.answer("Название категории?")
-        await state.set(CategoryState.title)
+        await state.set_state(CategoryState.title)
 
 
 @router.message(IsAdmin(), CategoryState.title)
 async def set_category_title_handler(message: Message, state: FSMContext):
+    if not message.text:
+        await message.answer("Получено пустое сообщение")
+        return
     category_input = validate_text_input(message.text, max_length=100)
     if not category_input:
         await message.answer("Укажите корректное название (до 100 символов)")
@@ -123,7 +134,7 @@ async def delete_category_handler(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == add_product)
 async def process_add_product(message: Message, state: FSMContext):
-    await state.set(ProductState.title)
+    await state.set_state(ProductState.title)
 
     markup = ReplyKeyboardMarkup(
         resize_keyboard=True, keyboard=[[KeyboardButton(text=cancel_message)]]
@@ -148,6 +159,9 @@ async def process_title_back(message: Message, state: FSMContext):
 @router.message(IsAdmin(), ProductState.title)
 async def process_title(message: Message, state: FSMContext):
     data = await state.get_data()
+    if not message.text:
+        await message.answer("Получено пустое сообщение")
+        return
     title = validate_text_input(message.text, max_length=100)
     if not title:
         await message.answer("Название слишком длинное или пустое (до 100 символов)")
@@ -155,13 +169,13 @@ async def process_title(message: Message, state: FSMContext):
     data["title"] = title
     await state.update_data(**data)
 
-    await state.set(ProductState.body)
+    await state.set_state(ProductState.body)
     await message.answer("Описание?", reply_markup=back_markup())
 
 
 @router.message(IsAdmin(), F.text == back_message, ProductState.body)
 async def process_body_back(message: Message, state: FSMContext):
-    await state.set(ProductState.title)
+    await state.set_state(ProductState.title)
 
     data = await state.get_data()
 
@@ -173,6 +187,9 @@ async def process_body_back(message: Message, state: FSMContext):
 @router.message(IsAdmin(), ProductState.body)
 async def process_body(message: Message, state: FSMContext):
     data = await state.get_data()
+    if not message.text:
+        await message.answer("Получено пустое сообщение")
+        return
     body = validate_text_input(message.text, max_length=1000)
     if not body:
         await message.answer("Описание слишком длинное или пустое (до 1000 символов)")
@@ -180,12 +197,15 @@ async def process_body(message: Message, state: FSMContext):
     data["body"] = body
     await state.update_data(**data)
 
-    await state.set(ProductState.image)
+    await state.set_state(ProductState.image)
     await message.answer("Фото?", reply_markup=back_markup())
 
 
 @router.message(IsAdmin(), F.content_type == "photo", ProductState.image)
 async def process_image_photo(message: Message, state: FSMContext):
+    if not message.photo:
+        await message.answer("Фото не получено")
+        return
     fileID = message.photo[-1].file_id
     file_info = await get_bot().get_file(fileID)
     downloaded_file = (await get_bot().download_file(file_info.file_path)).read()
@@ -194,14 +214,14 @@ async def process_image_photo(message: Message, state: FSMContext):
     data["image"] = downloaded_file
     await state.update_data(**data)
 
-    await ProductState.next()
+    await state.set_state(ProductState.price)
     await message.answer("Цена?", reply_markup=back_markup())
 
 
 @router.message(IsAdmin(), F.content_type == "text", ProductState.image)
 async def process_image_url(message: Message, state: FSMContext):
     if message.text == back_message:
-        await state.set(ProductState.body)
+        await state.set_state(ProductState.body)
 
         data = await state.get_data()
 
@@ -216,7 +236,7 @@ async def process_image_url(message: Message, state: FSMContext):
 @router.message(IsAdmin(), F.text.regex(r"^[^0-9]+$"), ProductState.price)
 async def process_price_invalid(message: Message, state: FSMContext):
     if message.text == back_message:
-        await state.set(ProductState.image)
+        await state.set_state(ProductState.image)
 
         data = await state.get_data()
 
@@ -229,6 +249,9 @@ async def process_price_invalid(message: Message, state: FSMContext):
 @router.message(IsAdmin(), F.text.regex(r"^[0-9]+$"), ProductState.price)
 async def process_price(message: Message, state: FSMContext):
     data = await state.get_data()
+    if not message.text:
+        await message.answer("Получено пустое сообщение")
+        return
     price_valid = validate_price(message.text)
     if not price_valid:
         await message.answer("Укажите корректную цену (число от 1 до 1000000)")
@@ -240,7 +263,7 @@ async def process_price(message: Message, state: FSMContext):
     body = data["body"]
     price = data["price"]
 
-    await state.set(ProductState.confirm)
+    await state.set_state(ProductState.confirm)
     text = f"<b>{title}</b>\n\n{body}\n\nЦена: {price} рублей."
 
     markup = check_markup()
@@ -259,7 +282,7 @@ async def process_confirm_invalid(message: Message, state: FSMContext):
 
 @router.message(IsAdmin(), F.text == back_message, ProductState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
-    await state.set(ProductState.price)
+    await state.set_state(ProductState.price)
 
     data = await state.get_data()
 
@@ -318,8 +341,11 @@ async def delete_product_callback_handler(query: CallbackQuery, state: FSMContex
             pass
     db.query("DELETE FROM products WHERE idx=?", (product_idx,))
     await query.answer("Удалено!")
-    if query.message:
-        await query.message.delete()
+    if query.message and hasattr(query.message, 'delete'):
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
 
 
 async def show_products(m, products, category_idx):
