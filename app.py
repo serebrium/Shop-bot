@@ -2,6 +2,7 @@ import os
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
+from aiogram.filters import Command
 from aiogram import F
 from data import config
 from loader import get_dispatcher, get_bot, db, register_routers
@@ -37,7 +38,7 @@ user_message = "Пользователь"
 admin_message = "Админ"
 
 
-@dp.message(commands="start")
+@dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     try:
         # Валидация входных данных

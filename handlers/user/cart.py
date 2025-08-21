@@ -161,14 +161,14 @@ async def checkout(message, state):
 
 @router.message(
     IsUser(),
-    lambda message: message.text not in [all_right_message, back_message],
-    state=CheckoutState.check_cart,
+    F.text.not_in([all_right_message, back_message]),
+    CheckoutState.check_cart,
 )
 async def process_check_cart_invalid(message: Message):
     await message.answer("Такого варианта не было.")
 
 
-@router.message(IsUser(), F.text == back_message, state=CheckoutState.check_cart)
+@router.message(IsUser(), F.text == back_message, CheckoutState.check_cart)
 async def process_check_cart_back(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
@@ -176,7 +176,7 @@ async def process_check_cart_back(message: Message, state: FSMContext):
     )
 
 
-@router.message(IsUser(), F.text == all_right_message, state=CheckoutState.check_cart)
+@router.message(IsUser(), F.text == all_right_message, CheckoutState.check_cart)
 async def process_check_cart_all_right(message: Message, state: FSMContext):
 
     await state.set(CheckoutState.name)
@@ -186,7 +186,7 @@ async def process_check_cart_all_right(message: Message, state: FSMContext):
     await message.answer("Как вас зовут?", reply_markup=markup)
 
 
-@router.message(IsUser(), F.text == back_message, state=CheckoutState.name)
+@router.message(IsUser(), F.text == back_message, CheckoutState.name)
 async def process_name_back(message: Message, state: FSMContext):
 
     await state.set(CheckoutState.check_cart)
@@ -202,7 +202,7 @@ async def process_name_back(message: Message, state: FSMContext):
     )
 
 
-@router.message(IsUser(), state=CheckoutState.name)
+@router.message(IsUser(), CheckoutState.name)
 async def process_name(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -216,7 +216,7 @@ async def process_name(message: Message, state: FSMContext):
     await message.answer("Укажите адрес доставки:", reply_markup=markup)
 
 
-@router.message(IsUser(), F.text == back_message, state=CheckoutState.address)
+@router.message(IsUser(), F.text == back_message, CheckoutState.address)
 async def process_address_back(message: Message, state: FSMContext):
 
     await state.set(CheckoutState.name)
@@ -229,7 +229,7 @@ async def process_address_back(message: Message, state: FSMContext):
     await message.answer(f"Изменить имя с <b>{name}</b>?", reply_markup=markup)
 
 
-@router.message(IsUser(), state=CheckoutState.address)
+@router.message(IsUser(), CheckoutState.address)
 async def process_address(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -257,14 +257,14 @@ async def confirm(message, state):
 
 @router.message(
     IsUser(),
-    lambda message: message.text not in [confirm_message, back_message],
-    state=CheckoutState.confirm,
+    F.text.not_in([confirm_message, back_message]),
+    CheckoutState.confirm,
 )
 async def process_confirm_invalid(message: Message):
     await message.answer("Такого варианта не было.")
 
 
-@router.message(IsUser(), F.text == back_message, state=CheckoutState.confirm)
+@router.message(IsUser(), F.text == back_message, CheckoutState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
 
     await state.set(CheckoutState.address)
@@ -277,7 +277,7 @@ async def process_confirm_back(message: Message, state: FSMContext):
     await message.answer(f"Изменить адрес с <b>{address}</b>?", reply_markup=markup)
 
 
-@router.message(IsUser(), F.text == confirm_message, state=CheckoutState.confirm)
+@router.message(IsUser(), F.text == confirm_message, CheckoutState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
 
     data = await state.get_data()

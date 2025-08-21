@@ -83,7 +83,7 @@ async def add_category_callback_handler(query: CallbackQuery, state: FSMContext)
         await state.set(CategoryState.title)
 
 
-@router.message(IsAdmin(), state=CategoryState.title)
+@router.message(IsAdmin(), CategoryState.title)
 async def set_category_title_handler(message: Message, state: FSMContext):
 
     category = message.text
@@ -126,7 +126,7 @@ async def process_add_product(message: Message, state: FSMContext):
     await message.answer("Название?", reply_markup=markup)
 
 
-@router.message(IsAdmin(), F.text == cancel_message, state=ProductState.title)
+@router.message(IsAdmin(), F.text == cancel_message, ProductState.title)
 async def process_cancel(message: Message, state: FSMContext):
 
     await message.answer("Ок, отменено!", reply_markup=ReplyKeyboardRemove())
@@ -135,12 +135,12 @@ async def process_cancel(message: Message, state: FSMContext):
     await process_settings(message)
 
 
-@router.message(IsAdmin(), F.text == back_message, state=ProductState.title)
+@router.message(IsAdmin(), F.text == back_message, ProductState.title)
 async def process_title_back(message: Message, state: FSMContext):
     await process_add_product(message)
 
 
-@router.message(IsAdmin(), state=ProductState.title)
+@router.message(IsAdmin(), ProductState.title)
 async def process_title(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -151,7 +151,7 @@ async def process_title(message: Message, state: FSMContext):
     await message.answer("Описание?", reply_markup=back_markup())
 
 
-@router.message(IsAdmin(), F.text == back_message, state=ProductState.body)
+@router.message(IsAdmin(), F.text == back_message, ProductState.body)
 async def process_body_back(message: Message, state: FSMContext):
 
     await state.set(ProductState.title)
@@ -163,7 +163,7 @@ async def process_body_back(message: Message, state: FSMContext):
     )
 
 
-@router.message(IsAdmin(), state=ProductState.body)
+@router.message(IsAdmin(), ProductState.body)
 async def process_body(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -174,7 +174,7 @@ async def process_body(message: Message, state: FSMContext):
     await message.answer("Фото?", reply_markup=back_markup())
 
 
-@router.message(IsAdmin(), F.content_type == "photo", state=ProductState.image)
+@router.message(IsAdmin(), F.content_type == "photo", ProductState.image)
 async def process_image_photo(message: Message, state: FSMContext):
 
     fileID = message.photo[-1].file_id
@@ -189,7 +189,7 @@ async def process_image_photo(message: Message, state: FSMContext):
     await message.answer("Цена?", reply_markup=back_markup())
 
 
-@router.message(IsAdmin(), F.content_type == "text", state=ProductState.image)
+@router.message(IsAdmin(), F.content_type == "text", ProductState.image)
 async def process_image_url(message: Message, state: FSMContext):
 
     if message.text == back_message:
@@ -207,7 +207,7 @@ async def process_image_url(message: Message, state: FSMContext):
         await message.answer("Вам нужно прислать фото товара.")
 
 
-@router.message(IsAdmin(), F.text.regex(r"^[^0-9]+$"), state=ProductState.price)
+@router.message(IsAdmin(), F.text.regex(r"^[^0-9]+$"), ProductState.price)
 async def process_price_invalid(message: Message, state: FSMContext):
 
     if message.text == back_message:
@@ -223,7 +223,7 @@ async def process_price_invalid(message: Message, state: FSMContext):
         await message.answer("Укажите цену в виде числа!")
 
 
-@router.message(IsAdmin(), F.text.regex(r"^[0-9]+$"), state=ProductState.price)
+@router.message(IsAdmin(), F.text.regex(r"^[0-9]+$"), ProductState.price)
 async def process_price(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -245,13 +245,13 @@ async def process_price(message: Message, state: FSMContext):
 @router.message(
     IsAdmin(),
     F.text.not_in([back_message, all_right_message]),
-    state=ProductState.confirm,
+    ProductState.confirm,
 )
 async def process_confirm_invalid(message: Message, state: FSMContext):
     await message.answer("Такого варианта не было.")
 
 
-@router.message(IsAdmin(), F.text == back_message, state=ProductState.confirm)
+@router.message(IsAdmin(), F.text == back_message, ProductState.confirm)
 async def process_confirm_back(message: Message, state: FSMContext):
 
     await state.set(ProductState.price)
@@ -263,7 +263,7 @@ async def process_confirm_back(message: Message, state: FSMContext):
     )
 
 
-@router.message(IsAdmin(), F.text == all_right_message, state=ProductState.confirm)
+@router.message(IsAdmin(), F.text == all_right_message, ProductState.confirm)
 async def process_confirm(message: Message, state: FSMContext):
 
     data = await state.get_data()

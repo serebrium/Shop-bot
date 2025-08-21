@@ -68,7 +68,7 @@ async def process_answer(query: CallbackQuery, state: FSMContext):
     await query.answer()
 
 
-@router.message(IsAdmin(), state=AnswerState.answer)
+@router.message(IsAdmin(), AnswerState.answer)
 async def process_submit(message: Message, state: FSMContext):
 
     data = await state.get_data()
@@ -80,13 +80,13 @@ async def process_submit(message: Message, state: FSMContext):
     await message.answer(f"Ответ: {answer}\n\nОтправить?", reply_markup=submit_markup())
 
 
-@router.message(IsAdmin(), F.text == cancel_message, state=AnswerState.submit)
+@router.message(IsAdmin(), F.text == cancel_message, AnswerState.submit)
 async def process_cancel_answer(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Отменено!", reply_markup=ReplyKeyboardRemove())
 
 
-@router.message(IsAdmin(), F.text == all_right_message, state=AnswerState.submit)
+@router.message(IsAdmin(), F.text == all_right_message, AnswerState.submit)
 async def process_send_answer(message: Message, state: FSMContext):
 
     data = await state.get_data()
