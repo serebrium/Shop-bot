@@ -6,11 +6,15 @@ def product_markup(idx, count):
     markup = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="➖", callback_data=f"product_decrease_{idx}"),
+                InlineKeyboardButton(
+                    text="➖", callback_data=f"product_decrease_{idx}"
+                ),
                 InlineKeyboardButton(
                     text=f"{count}", callback_data=f"product_count_{idx}"
                 ),
-                InlineKeyboardButton(text="➕", callback_data=f"product_increase_{idx}"),
+                InlineKeyboardButton(
+                    text="➕", callback_data=f"product_increase_{idx}"
+                ),
             ]
         ]
     )
